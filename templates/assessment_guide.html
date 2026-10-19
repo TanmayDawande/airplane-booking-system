@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Assessment Video Presentation Guide - Airline Reservation System{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <div class="assessment-badge" style="margin-bottom: 0.5rem;">
+        <i data-lucide="video" style="width: 14px; height: 14px;"></i>
+        <span>Demonstration Video Recording Plan</span>
+    </div>
+    <h2>Student Video Presentation Scripts & Cue Cards</h2>
+    <p class="subtitle" style="margin-bottom: 0;">
+        Step-by-step cue cards for Assessments 8, 9, and 10 with designated speaking roles and actions for both teammates.
+    </p>
+</div>
+
+<!-- Quick Navigation Pill Bar -->
+<div style="display: flex; gap: 0.5rem; margin-bottom: 2rem; flex-wrap: wrap;">
+    <a href="#a8-guide" class="btn btn-secondary btn-sm">
+        <i data-lucide="monitor" style="width: 13px; height: 13px; color: #3b82f6;"></i>
+        <span>Assessment 8: Front-End & Connectivity</span>
+    </a>
+    <a href="#a9-guide" class="btn btn-secondary btn-sm">
+        <i data-lucide="database" style="width: 13px; height: 13px; color: #f59e0b;"></i>
+        <span>Assessment 9: CRUD & SQL Queries</span>
+    </a>
+    <a href="#a10-guide" class="btn btn-secondary btn-sm">
+        <i data-lucide="check-circle" style="width: 13px; height: 13px; color: #10b981;"></i>
+        <span>Assessment 10: Complete Workflow & Validation</span>
+    </a>
+</div>
+
+<!-- ============================================================================== -->
+<!-- ASSESSMENT 8 GUIDE -->
+<!-- ============================================================================== -->
+<section id="a8-guide" class="card" style="margin-bottom: 2rem; border-top: 3px solid #3b82f6;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0.85rem; flex-wrap: wrap; gap: 0.5rem;">
+        <div>
+            <span class="badge badge-blue" style="margin-bottom: 0.35rem;">Assessment 8 Demonstration</span>
+            <h3 style="font-size: 1.3rem;">Front-End Design & Basic Database Connectivity</h3>
+        </div>
+        <span class="badge badge-muted" style="font-family: var(--font-code);">Length: ~3 Minutes</span>
+    </div>
+
+    <!-- Teammate 1 Role -->
+    <div class="card" style="background: var(--bg-card); margin-bottom: 1rem; padding: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <div style="font-weight: 700; color: #60a5fa; display: flex; align-items: center; gap: 0.4rem;">
+                <i data-lucide="user" style="width: 16px; height: 16px;"></i>
+                <span>Teammate 1: Introduction & Interface Walkthrough</span>
+            </div>
+            <span class="badge badge-muted">Face Visible on Camera</span>
+        </div>
+        <ol style="margin-left: 1.25rem; line-height: 1.8; color: var(--text); font-size: 0.9rem;">
+            <li><strong>Project Introduction (0:00 - 0:45):</strong> State team and presenter names: <em>"Hello, our DBMS project is the Airline Reservation System designed in 3NF to support flight search, seat reservations, and transactional payments."</em></li>
+            <li><strong>Front-End Interface (0:45 - 1:30):</strong> Walk through the home page, flight search form (origin, destination, date, class), scheduled flights listing, and navigation bar.</li>
+            <li><strong>Database Connectivity Proof (1:30 - 2:00):</strong> Click the <strong>Database Engine Badge</strong> in the top header. Show that the backend is connected to the database engine (MySQL / SQLite), displaying active table counts and ping latency.</li>
+        </ol>
+    </div>
+
+    <!-- Teammate 2 Role -->
+    <div class="card" style="background: var(--bg-card); padding: 1.25rem; margin-bottom: 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <div style="font-weight: 700; color: #34d399; display: flex; align-items: center; gap: 0.4rem;">
+                <i data-lucide="user-check" style="width: 16px; height: 16px;"></i>
+                <span>Teammate 2: Data Entry & Table Verification</span>
+            </div>
+            <span class="badge badge-muted">Face Visible on Camera</span>
+        </div>
+        <ol style="margin-left: 1.25rem; line-height: 1.8; color: var(--text); font-size: 0.9rem;">
+            <li><strong>Enter Record through Front-End (2:00 - 2:40):</strong> Click the <strong>"A8 Proof"</strong> button on the header. Fill in a new passenger record:
+                <div class="code-box" style="margin: 0.5rem 0;">
+                    Name: Rohit Verma | Email: rohit.verma@example.com | Phone: +91-9876543210 | Passport: Z1234567
+                </div>
+                Click <strong>"Execute INSERT & Retrieve"</strong>.
+            </li>
+            <li><strong>Retrieve Newly Inserted Record (2:40 - 3:00):</strong> Point to the green verification box showing the generated primary key (`passenger_id`) and timestamp retrieved back from the database.</li>
+            <li><strong>Verify Directly in Database Table (3:00 - 3:45):</strong> Switch to the <strong>DB Studio</strong> page ([/db-studio](http://127.0.0.1:5000/db-studio)) and click on the <code>passengers</code> table or run:
+                <div class="code-box" style="margin: 0.5rem 0;">
+                    SELECT * FROM passengers WHERE email = 'rohit.verma@example.com';
+                </div>
+                Show the row in the table, confirming persistent storage.
+            </li>
+        </ol>
+    </div>
+</section>
+
+<!-- ============================================================================== -->
+<!-- ASSESSMENT 9 GUIDE -->
+<!-- ============================================================================== -->
+<section id="a9-guide" class="card" style="margin-bottom: 2rem; border-top: 3px solid #f59e0b;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0.85rem; flex-wrap: wrap; gap: 0.5rem;">
+        <div>
+            <span class="badge badge-amber" style="margin-bottom: 0.35rem;">Assessment 9 Demonstration</span>
+            <h3 style="font-size: 1.3rem;">Database Operations & Back-End Implementation</h3>
+        </div>
+        <span class="badge badge-muted" style="font-family: var(--font-code);">Length: ~4 Minutes</span>
+    </div>
+
+    <!-- Teammate 1 Role -->
+    <div class="card" style="background: var(--bg-card); margin-bottom: 1rem; padding: 1.25rem;">
+        <div style="font-weight: 700; color: #60a5fa; margin-bottom: 0.75rem;">Teammate 1: Back-End Communication & Full CRUD Operations</div>
+        <ol style="margin-left: 1.25rem; line-height: 1.8; color: var(--text); font-size: 0.9rem;">
+            <li><strong>Back-End Architecture (0:00 - 0:45):</strong> Explain that Flask communicates with the database using parameterized queries to protect against SQL injection and manage transactions cleanly.</li>
+            <li><strong>INSERT Operation:</strong> On the <strong>Admin CRUD</strong> page ([/admin](http://127.0.0.1:5000/admin)), click <strong>"Schedule Flight (INSERT)"</strong>. Enter flight `AI-999` from BOM to DEL with base fare ₹5,200. Execute query and point out the newly created flight in the table.</li>
+            <li><strong>UPDATE Operation:</strong> Click <strong>"Edit"</strong> on `AI-999`. Update the fare to ₹5,600 and change status to `DELAYED`. Show the updated values in the table. Verify in DB Studio with:
+                <div class="code-box" style="margin: 0.5rem 0;">
+                    SELECT flight_number, base_fare, status FROM flights WHERE flight_number = 'AI-999';
+                </div>
+            </li>
+            <li><strong>DELETE Operation:</strong> Click <strong>"Delete"</strong> on flight `AI-999`. Confirm the dialog. Show the flight row disappear from the table and verify that `SELECT * FROM flights WHERE flight_number = 'AI-999'` returns 0 rows.</li>
+        </ol>
+    </div>
+
+    <!-- Teammate 2 Role -->
+    <div class="card" style="background: var(--bg-card); padding: 1.25rem; margin-bottom: 0;">
+        <div style="font-weight: 700; color: #34d399; margin-bottom: 0.75rem;">Teammate 2: Complex SQL Queries & Triggers</div>
+        <ol style="margin-left: 1.25rem; line-height: 1.8; color: var(--text); font-size: 0.9rem;">
+            <li><strong>Multi-Table INNER JOIN:</strong> Open <strong>Reports</strong> ([/reports](http://127.0.0.1:5000/reports)). Show the 5-table JOIN combining `bookings`, `passengers`, `flights`, `airlines`, and `airports`. Explain how foreign keys maintain relational links without data duplication.</li>
+            <li><strong>GROUP BY & Aggregations with HAVING:</strong> Show the Airline Revenue table. Explain how SQL aggregates total bookings (`COUNT`), gross revenue (`SUM`), and average ticket prices (`AVG`) with `HAVING gross_revenue > 5000`.</li>
+            <li><strong>Nested Subquery & Triggers:</strong> Show the High-Value Passengers report using a subquery `WHERE total_amount > (SELECT AVG(total_amount) FROM bookings)`. Conclude by viewing the <strong>Audit Logs</strong> tab on [/admin](http://127.0.0.1:5000/admin) to demonstrate database triggers capturing insert/update events.</li>
+        </ol>
+    </div>
+</section>
+
+<!-- ============================================================================== -->
+<!-- ASSESSMENT 10 GUIDE -->
+<!-- ============================================================================== -->
+<section id="a10-guide" class="card" style="margin-bottom: 2rem; border-top: 3px solid #10b981;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0.85rem; flex-wrap: wrap; gap: 0.5rem;">
+        <div>
+            <span class="badge badge-emerald" style="margin-bottom: 0.35rem;">Assessment 10 Demonstration</span>
+            <h3 style="font-size: 1.3rem;">Complete Project Workflow and Functional Validation</h3>
+        </div>
+        <span class="badge badge-muted" style="font-family: var(--font-code);">Length: ~5 Minutes</span>
+    </div>
+
+    <!-- Teammate 1 Role -->
+    <div class="card" style="background: var(--bg-card); margin-bottom: 1rem; padding: 1.25rem;">
+        <div style="font-weight: 700; color: #60a5fa; margin-bottom: 0.75rem;">Teammate 1: Search, Seat Map Selection & Passenger Entry</div>
+        <ol style="margin-left: 1.25rem; line-height: 1.8; color: var(--text); font-size: 0.9rem;">
+            <li><strong>Search Flights (0:00 - 0:45):</strong> Go to the home page ([/](http://127.0.0.1:5000/)), select Mumbai (BOM) to New Delhi (DEL), and click <strong>"Search Flights"</strong>.</li>
+            <li><strong>Select Flight & Seat (0:45 - 2:00):</strong> Click <strong>"Select Seat"</strong> on flight `AI-101`. On the cabin map, point out occupied seats (red) and available seats. Click on seat `11C`. Show the price breakdown update dynamically for the selected seat.</li>
+            <li><strong>Input Validation & Error Handling (2:00 - 2:30):</strong> Attempt to submit with incomplete fields or invalid format to demonstrate client and server-side validation. Then enter valid passenger details.</li>
+            <li><strong>Submit Transaction:</strong> Click <strong>"Confirm & Pay"</strong>. Highlight that this triggers an atomic ACID database transaction.</li>
+        </ol>
+    </div>
+
+    <!-- Teammate 2 Role -->
+    <div class="card" style="background: var(--bg-card); padding: 1.25rem; margin-bottom: 0;">
+        <div style="font-weight: 700; color: #34d399; margin-bottom: 0.75rem;">Teammate 2: Boarding Pass Generation, DB Verification & Cancellation</div>
+        <ol style="margin-left: 1.25rem; line-height: 1.8; color: var(--text); font-size: 0.9rem;">
+            <li><strong>E-Ticket / Boarding Pass Generation (2:30 - 3:15):</strong> Show the generated boarding pass with the generated PNR, passenger name, seat 11C, departure time, and barcode. Click <strong>"Print Boarding Pass"</strong>.</li>
+            <li><strong>Database Transaction Verification (3:15 - 4:00):</strong> Note the generated PNR code. Switch to <strong>DB Studio</strong> ([/db-studio](http://127.0.0.1:5000/db-studio)) and run:
+                <div class="code-box" style="margin: 0.5rem 0;">
+                    SELECT b.pnr, b.seat_number, b.status, p.amount, p.payment_status 
+                    FROM bookings b JOIN payments p ON b.booking_id = p.booking_id 
+                    WHERE b.pnr = '&lt;YOUR_PNR&gt;';
+                </div>
+                Verify that both the booking and payment records were inserted atomically.
+            </li>
+            <li><strong>Booking Cancellation & Seat Release (4:00 - 4:45):</strong> Navigate to <strong>Manage PNR</strong> ([/my-bookings](http://127.0.0.1:5000/my-bookings)). Click <strong>"Cancel Booking"</strong>. Show that status updates to `CANCELLED`, payment is refunded, and seat 11C is immediately released for re-booking.</li>
+            <li><strong>Conclusion (4:45 - 5:00):</strong> Conclude that all three assessments have distinct, verified demonstrations covering the complete DBMS curriculum.</li>
+        </ol>
+    </div>
+</section>
+{% endblock %}

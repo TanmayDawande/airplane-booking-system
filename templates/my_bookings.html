@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Bookings | SkyReserve{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <h2>Manage Bookings & PNR Lookup</h2>
+    <p class="subtitle">Search your booking by PNR, change your seat, or cancel your reservation.</p>
+</div>
+
+<!-- Search Form -->
+<div class="card" style="max-width: 600px; margin-bottom: 2rem;">
+    <h3 style="margin-bottom: 0.75rem; font-size: 1rem;">Retrieve Booking by PNR</h3>
+    <form action="{{ url_for('my_bookings_page') }}" method="GET" style="display: flex; gap: 0.75rem;">
+        <input type="text" name="pnr" class="field-input" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.65rem 0.85rem; font-family: var(--font-code); font-size: 1rem; text-transform: uppercase;" placeholder="e.g. AERO101A, AERO501E" value="{{ pnr_query }}" required>
+        <button type="submit" class="btn btn-primary btn-sm" style="padding: 0 1.25rem;">
+            Retrieve
+        </button>
+    </form>
+</div>
+
+{% if searched_booking %}
+<!-- Searched Booking Card -->
+<div class="card" style="border-left: 3px solid #3b82f6; margin-bottom: 2.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.2rem;">
+                <span style="font-family: var(--font-code); font-weight: 700; color: #60a5fa; font-size: 1rem;">{{ searched_booking.pnr }}</span>
+                <span style="font-size: 0.75rem; background: var(--bg-card); padding: 0.15rem 0.5rem; border-radius: 4px; color: var(--text-muted); border: 1px solid var(--border);">{{ searched_booking.booking_status }}</span>
+            </div>
+            <h3 style="color: #fff; font-size: 1.2rem;">{{ searched_booking.passenger_name }}</h3>
+        </div>
+
+        <div style="text-align: right;">
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Total Fare Paid</span>
+            <div style="font-size: 1.35rem; font-weight: 700; color: #10b981; font-family: var(--font-code);">
+                ₹{{ "{:,.2f}".format(searched_booking.total_amount) }}
+            </div>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; font-size: 0.9rem;">
+        <div>
+            <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Flight</div>
+            <div style="font-weight: 600; color: #fff;">{{ searched_booking.flight_number }} • {{ searched_booking.airline_name }}</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">{{ searched_booking.aircraft_model }}</div>
+        </div>
+        <div>
+            <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Route</div>
+            <div style="font-weight: 600; color: #fff;">{{ searched_booking.origin_city }} &rarr; {{ searched_booking.dest_city }}</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">{{ searched_booking.departure_time }}</div>
+        </div>
+        <div>
+            <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Assigned Seat</div>
+            <div style="font-size: 1.25rem; font-weight: 700; color: #60a5fa; font-family: var(--font-code);">
+                {{ searched_booking.seat_number }}
+                <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">({{ searched_booking.travel_class }})</span>
+            </div>
+        </div>
+        <div>
+            <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Payment</div>
+            <div style="font-weight: 600; color: #fff;">{{ searched_booking.payment_method or 'UPI' }}</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-code);">{{ searched_booking.transaction_id or 'TXN_VERIFIED' }}</div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div style="display: flex; gap: 0.75rem; border-top: 1px solid var(--border); padding-top: 1rem; flex-wrap: wrap;">
+        <a href="{{ url_for('ticket_page', pnr=searched_booking.pnr) }}" class="btn btn-primary btn-sm">
+            View Boarding Pass
+        </a>
+
+        {% if searched_booking.booking_status == 'CONFIRMED' %}
+        <!-- Assessment 9 UPDATE -->
+        <button onclick="openSeatModal('{{ searched_booking.pnr }}', '{{ searched_booking.seat_number }}')" class="btn btn-secondary btn-sm" title="Assessment 9 UPDATE demonstration">
+            Change Seat (UPDATE)
+        </button>
+
+        <!-- Assessment 9 DELETE / Cancel -->
+        <button onclick="cancelBooking('{{ searched_booking.pnr }}')" class="btn btn-danger btn-sm" title="Assessment 9 DELETE / Cancel demonstration">
+            Cancel Booking (DELETE/REFUND)
+        </button>
+        {% endif %}
+    </div>
+</div>
+{% elif pnr_query %}
+<div class="card" style="text-align: center; padding: 2rem; margin-bottom: 2rem;">
+    <p style="color: var(--text-muted);">No booking found with PNR "{{ pnr_query }}". Please check the list below.</p>
+</div>
+{% endif %}
+
+<!-- Recent Bookings Table -->
+<div class="card" style="padding: 0; overflow: hidden;">
+    <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--border);">
+        <h3 style="font-size: 1rem;">Recent System Bookings</h3>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>PNR</th>
+                    <th>Passenger</th>
+                    <th>Flight</th>
+                    <th>Route</th>
+                    <th>Seat</th>
+                    <th>Class</th>
+                    <th>Fare</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in recent_bookings %}
+                <tr>
+                    <td style="font-family: var(--font-code); font-weight: 700; color: #60a5fa;">{{ b.pnr }}</td>
+                    <td style="font-weight: 600; color: #fff;">{{ b.first_name }} {{ b.last_name }}</td>
+                    <td style="font-family: var(--font-code);">{{ b.flight_number }}</td>
+                    <td>{{ b.origin_city }} &rarr; {{ b.dest_city }}</td>
+                    <td style="font-family: var(--font-code); font-weight: 600;">{{ b.seat_number }}</td>
+                    <td>{{ b.travel_class }}</td>
+                    <td style="font-family: var(--font-code); font-weight: 600; color: #10b981;">₹{{ "{:,.0f}".format(b.total_amount) }}</td>
+                    <td>
+                        <span style="font-size: 0.75rem; background: var(--bg-card); padding: 0.2rem 0.5rem; border-radius: 4px; border: 1px solid var(--border);">
+                            {{ b.booking_status }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('ticket_page', pnr=b.pnr) }}" class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;">
+                            Ticket
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Seat Change Modal (Assessment 9 UPDATE) -->
+<div id="seatChangeModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div>
+                <h3>Change Seat (UPDATE Operation)</h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">Assessment 9: Modifies seat assignment in the database</p>
+            </div>
+            <button onclick="closeModal('seatChangeModal')" style="background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer;">&times;</button>
+        </div>
+
+        <form id="seatChangeForm" onsubmit="submitSeatChange(event)">
+            <div class="modal-body">
+                <input type="hidden" id="changeSeatPnr" value="">
+
+                <div style="margin-bottom: 1rem;">
+                    <label class="field-label">Current Seat</label>
+                    <input type="text" id="currentSeatVal" class="field-input" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.6rem; opacity: 0.6;" readonly>
+                </div>
+
+                <div>
+                    <label class="field-label">New Seat Code</label>
+                    <input type="text" id="newSeatVal" class="field-input" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.6rem; font-family: var(--font-code); text-transform: uppercase;" required placeholder="e.g. 11F, 12C, 2B">
+                    <span style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.3rem; display: block;">Format: Row Number + Letter (e.g. 11A to 15F)</span>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" onclick="closeModal('seatChangeModal')" class="btn btn-secondary btn-sm">Cancel</button>
+                <button type="submit" class="btn btn-primary btn-sm">Update Seat in DB</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function openSeatModal(pnr, currentSeat) {
+        document.getElementById('changeSeatPnr').value = pnr;
+        document.getElementById('currentSeatVal').value = currentSeat;
+        document.getElementById('newSeatVal').value = '';
+        openModal('seatChangeModal');
+    }
+
+    async function submitSeatChange(e) {
+        e.preventDefault();
+        const pnr = document.getElementById('changeSeatPnr').value;
+        const seat = document.getElementById('newSeatVal').value.trim().toUpperCase();
+
+        try {
+            const res = await fetch(`/api/bookings/${pnr}/change-seat`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ seat_number: seat })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast(data.message, 'success');
+                setTimeout(() => window.location.reload(), 800);
+            } else {
+                showToast(data.error, 'error');
+            }
+        } catch (err) {
+            showToast('Update failed: ' + err.message, 'error');
+        }
+    }
+</script>
+{% endblock %}

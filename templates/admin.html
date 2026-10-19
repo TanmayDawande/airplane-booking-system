@@ -1,0 +1,596 @@
+{% extends "base.html" %}
+
+{% block title %}Admin CRUD Portal - Airline Reservation System{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+        <h2>Flight & Passenger Administration</h2>
+        <p class="subtitle" style="margin-bottom: 0;">
+            Manage scheduled flights, passenger records, and bookings.
+        </p>
+    </div>
+    <div style="display: flex; gap: 0.65rem;">
+        <button onclick="openModal('addFlightModal')" class="btn btn-primary">
+            <i data-lucide="plus" style="width: 15px; height: 15px;"></i>
+            <span>Schedule Flight</span>
+        </button>
+        <button onclick="openModal('assessment8Modal')" class="btn btn-secondary">
+            <i data-lucide="user-plus" style="width: 15px; height: 15px;"></i>
+            <span>Add Passenger</span>
+        </button>
+    </div>
+</div>
+
+<!-- Tabs Bar -->
+<div class="tab-bar">
+    <button class="tab-btn active" onclick="switchAdminTab('flightsTab', this)">
+        <i data-lucide="plane" style="width: 15px; height: 15px;"></i>
+        <span>Flights ({{ flights|length }})</span>
+    </button>
+    <button class="tab-btn" onclick="switchAdminTab('passengersTab', this)">
+        <i data-lucide="users" style="width: 15px; height: 15px;"></i>
+        <span>Passengers ({{ passengers|length }})</span>
+    </button>
+    <button class="tab-btn" onclick="switchAdminTab('bookingsTab', this)">
+        <i data-lucide="ticket" style="width: 15px; height: 15px;"></i>
+        <span>Bookings ({{ bookings|length }})</span>
+    </button>
+    <button class="tab-btn" onclick="switchAdminTab('auditTab', this)">
+        <i data-lucide="activity" style="width: 15px; height: 15px;"></i>
+        <span>Audit Logs ({{ audit_logs|length }})</span>
+    </button>
+</div>
+
+<!-- Tab 1: Flights (CRUD) -->
+<div id="flightsTab" class="admin-tab-pane">
+    <div class="card" style="padding: 0; overflow: hidden;">
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Flight</th>
+                        <th>Airline</th>
+                        <th>Aircraft</th>
+                        <th>Route</th>
+                        <th>Departure</th>
+                        <th>Base Fare</th>
+                        <th>Status</th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in flights %}
+                    <tr id="flight-row-{{ f.flight_id }}">
+                        <td style="font-family: var(--font-code); color: var(--text-dim);">{{ f.flight_id }}</td>
+                        <td style="font-family: var(--font-code); font-weight: 700; color: #60a5fa;">{{ f.flight_number }}</td>
+                        <td style="font-weight: 600;">{{ f.airline_name }}</td>
+                        <td style="font-size: 0.85rem; color: var(--text-muted);">{{ f.aircraft_model }}</td>
+                        <td style="font-weight: 600;">{{ f.origin_code }} &rarr; {{ f.destination_code }}</td>
+                        <td style="font-family: var(--font-code); font-size: 0.82rem; color: var(--text-muted);">{{ f.departure_time }}</td>
+                        <td style="font-family: var(--font-code); font-weight: 600; color: #34d399;">₹{{ "{:,.0f}".format(f.base_fare) }}</td>
+                        <td>
+                            {% if f.status == 'ON_TIME' or f.status == 'SCHEDULED' %}
+                            <span class="badge badge-emerald">{{ f.status }}</span>
+                            {% elif f.status == 'DELAYED' %}
+                            <span class="badge badge-amber">{{ f.status }}</span>
+                            {% elif f.status == 'CANCELLED' %}
+                            <span class="badge badge-rose">{{ f.status }}</span>
+                            {% else %}
+                            <span class="badge badge-blue">{{ f.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: right;">
+                            <div style="display: inline-flex; gap: 0.4rem;">
+                                <button onclick="openEditFlightModal({{ f.flight_id }}, '{{ f.flight_number }}', {{ f.base_fare }}, '{{ f.status }}')" class="btn btn-secondary btn-sm" title="Edit Flight (UPDATE)">
+                                    <i data-lucide="edit-2" style="width: 13px; height: 13px;"></i>
+                                    <span>Edit</span>
+                                </button>
+                                <button onclick="deleteFlight({{ f.flight_id }}, '{{ f.flight_number }}')" class="btn btn-danger btn-sm" title="Delete Flight (DELETE)">
+                                    <i data-lucide="trash-2" style="width: 13px; height: 13px;"></i>
+                                    <span>Delete</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Tab 2: Passengers (CRUD) -->
+<div id="passengersTab" class="admin-tab-pane" style="display: none;">
+    <div class="card" style="padding: 0; overflow: hidden;">
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Passenger Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Passport</th>
+                        <th>Date of Birth</th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in passengers %}
+                    <tr id="passenger-row-{{ p.passenger_id }}">
+                        <td style="font-family: var(--font-code); color: var(--text-dim);">{{ p.passenger_id }}</td>
+                        <td style="font-weight: 600;">{{ p.first_name }} {{ p.last_name }}</td>
+                        <td style="color: #60a5fa;">{{ p.email }}</td>
+                        <td>{{ p.phone }}</td>
+                        <td style="font-family: var(--font-code); font-size: 0.85rem;">{{ p.passport_number }}</td>
+                        <td style="font-size: 0.85rem; color: var(--text-muted);">{{ p.date_of_birth }}</td>
+                        <td style="text-align: right;">
+                            <div style="display: inline-flex; gap: 0.4rem;">
+                                <button onclick="openEditPassengerModal({{ p.passenger_id }}, '{{ p.first_name }}', '{{ p.last_name }}', '{{ p.email }}', '{{ p.phone }}', '{{ p.passport_number }}')" class="btn btn-secondary btn-sm" title="Edit Passenger (UPDATE)">
+                                    <i data-lucide="edit-2" style="width: 13px; height: 13px;"></i>
+                                    <span>Edit</span>
+                                </button>
+                                <button onclick="deletePassenger({{ p.passenger_id }}, '{{ p.first_name }} {{ p.last_name }}')" class="btn btn-danger btn-sm" title="Delete Passenger (DELETE)">
+                                    <i data-lucide="trash-2" style="width: 13px; height: 13px;"></i>
+                                    <span>Delete</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Tab 3: Bookings List -->
+<div id="bookingsTab" class="admin-tab-pane" style="display: none;">
+    <div class="card" style="padding: 0; overflow: hidden;">
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>PNR</th>
+                        <th>Passenger</th>
+                        <th>Flight</th>
+                        <th>Seat</th>
+                        <th>Class</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in bookings %}
+                    <tr>
+                        <td style="font-family: var(--font-code); color: var(--text-dim);">{{ b.booking_id }}</td>
+                        <td style="font-family: var(--font-code); font-weight: 700; color: #60a5fa;">{{ b.pnr }}</td>
+                        <td style="font-weight: 600;">{{ b.first_name }} {{ b.last_name }}</td>
+                        <td style="font-family: var(--font-code);">{{ b.flight_number }}</td>
+                        <td style="font-family: var(--font-code); font-weight: 600;">{{ b.seat_number }}</td>
+                        <td style="font-size: 0.85rem;">{{ b.travel_class }}</td>
+                        <td style="font-family: var(--font-code); font-weight: 600; color: #34d399;">₹{{ "{:,.2f}".format(b.total_amount) }}</td>
+                        <td>
+                            {% if b.booking_status == 'CONFIRMED' %}
+                            <span class="badge badge-emerald">CONFIRMED</span>
+                            {% elif b.booking_status == 'CANCELLED' %}
+                            <span class="badge badge-rose">CANCELLED</span>
+                            {% else %}
+                            <span class="badge badge-muted">{{ b.booking_status }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Tab 4: Audit Logs (Triggers) -->
+<div id="auditTab" class="admin-tab-pane" style="display: none;">
+    <div class="card" style="padding: 0; overflow: hidden;">
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Action</th>
+                        <th>Table</th>
+                        <th>Record ID</th>
+                        <th>Audit Details</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for l in audit_logs %}
+                    <tr>
+                        <td style="font-family: var(--font-code); color: var(--text-dim);">#{{ l.log_id }}</td>
+                        <td>
+                            <span class="badge badge-blue">{{ l.action_type }}</span>
+                        </td>
+                        <td style="font-family: var(--font-code);">{{ l.table_name }}</td>
+                        <td style="font-family: var(--font-code);">{{ l.record_id }}</td>
+                        <td style="font-size: 0.85rem; color: var(--text-muted);">{{ l.details }}</td>
+                        <td style="font-family: var(--font-code); font-size: 0.8rem; color: var(--text-dim);">{{ l.timestamp }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add New Flight (INSERT) -->
+<div id="addFlightModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 620px;">
+        <div class="modal-header">
+            <div>
+                <h3 style="font-size: 1.15rem;">Schedule New Flight (INSERT)</h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Inserts a new record into flights table</p>
+            </div>
+            <button onclick="closeModal('addFlightModal')" style="background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+
+        <form onsubmit="submitAddFlight(event)">
+            <div class="modal-body">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.85rem; margin-bottom: 1rem;">
+                    <div>
+                        <label class="field-label">Flight Number</label>
+                        <input type="text" id="addFlightNo" class="form-input" required placeholder="e.g. AI-999" style="text-transform: uppercase;">
+                    </div>
+                    <div>
+                        <label class="field-label">Airline</label>
+                        <select id="addFlightAirline" class="form-select" required>
+                            {% for al in airlines %}
+                            <option value="{{ al.airline_id }}">{{ al.airline_name }} ({{ al.airline_code }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="field-label">Aircraft</label>
+                        <select id="addFlightAircraft" class="form-select" required>
+                            {% for ac in aircrafts %}
+                            <option value="{{ ac.aircraft_id }}">{{ ac.model }} ({{ ac.total_seats }} seats)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin-bottom: 1rem;">
+                    <div>
+                        <label class="field-label">Origin Airport</label>
+                        <select id="addFlightOrigin" class="form-select" required>
+                            {% for a in airports %}
+                            <option value="{{ a.airport_code }}">{{ a.city }} ({{ a.airport_code }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="field-label">Destination Airport</label>
+                        <select id="addFlightDest" class="form-select" required>
+                            {% for a in airports %}
+                            <option value="{{ a.airport_code }}" {% if a.airport_code == 'DEL' %}selected{% endif %}>{{ a.city }} ({{ a.airport_code }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin-bottom: 1rem;">
+                    <div>
+                        <label class="field-label">Departure</label>
+                        <input type="datetime-local" id="addFlightDep" class="form-input" required value="2026-10-29T10:00">
+                    </div>
+                    <div>
+                        <label class="field-label">Arrival</label>
+                        <input type="datetime-local" id="addFlightArr" class="form-input" required value="2026-10-29T12:15">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.85rem;">
+                    <div>
+                        <label class="field-label">Duration (Mins)</label>
+                        <input type="number" id="addFlightDuration" class="form-input" value="135" required>
+                    </div>
+                    <div>
+                        <label class="field-label">Base Fare (INR)</label>
+                        <input type="number" id="addFlightFare" class="form-input" value="4700" required>
+                    </div>
+                    <div>
+                        <label class="field-label">Status</label>
+                        <select id="addFlightStatus" class="form-select">
+                            <option value="SCHEDULED">SCHEDULED</option>
+                            <option value="ON_TIME">ON_TIME</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" onclick="closeModal('addFlightModal')" class="btn btn-secondary">Cancel</button>
+                <button type="submit" id="btnAddFlightSubmit" class="btn btn-primary">
+                    <i data-lucide="plus" style="width: 14px; height: 14px;"></i>
+                    <span>Execute INSERT</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Edit Flight (UPDATE) -->
+<div id="editFlightModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 480px;">
+        <div class="modal-header">
+            <div>
+                <h3 style="font-size: 1.15rem;">Modify Flight (UPDATE)</h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Updates fare and operational status in database</p>
+            </div>
+            <button onclick="closeModal('editFlightModal')" style="background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+
+        <form onsubmit="submitEditFlight(event)">
+            <div class="modal-body">
+                <input type="hidden" id="editFlightId" value="">
+                <div style="margin-bottom: 1rem;">
+                    <label class="field-label">Flight Number</label>
+                    <input type="text" id="editFlightNo" class="form-input" readonly>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label class="field-label">Base Fare (INR)</label>
+                    <input type="number" id="editFlightFare" class="form-input" required>
+                </div>
+                <div>
+                    <label class="field-label">Operational Status</label>
+                    <select id="editFlightStatus" class="form-select">
+                        <option value="SCHEDULED">SCHEDULED</option>
+                        <option value="ON_TIME">ON_TIME</option>
+                        <option value="BOARDING">BOARDING</option>
+                        <option value="DELAYED">DELAYED</option>
+                        <option value="CANCELLED">CANCELLED</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" onclick="closeModal('editFlightModal')" class="btn btn-secondary">Cancel</button>
+                <button type="submit" id="btnEditFlightSubmit" class="btn btn-primary">
+                    <i data-lucide="save" style="width: 14px; height: 14px;"></i>
+                    <span>Save (UPDATE)</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Edit Passenger (UPDATE) -->
+<div id="editPassengerModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 520px;">
+        <div class="modal-header">
+            <div>
+                <h3 style="font-size: 1.15rem;">Modify Passenger (UPDATE)</h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Updates passenger details in database</p>
+            </div>
+            <button onclick="closeModal('editPassengerModal')" style="background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+
+        <form onsubmit="submitEditPassenger(event)">
+            <div class="modal-body">
+                <input type="hidden" id="editPaxId" value="">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin-bottom: 1rem;">
+                    <div>
+                        <label class="field-label">First Name</label>
+                        <input type="text" id="editPaxFirst" class="form-input" required>
+                    </div>
+                    <div>
+                        <label class="field-label">Last Name</label>
+                        <input type="text" id="editPaxLast" class="form-input" required>
+                    </div>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label class="field-label">Email Address</label>
+                    <input type="email" id="editPaxEmail" class="form-input" required>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem;">
+                    <div>
+                        <label class="field-label">Phone</label>
+                        <input type="text" id="editPaxPhone" class="form-input" required>
+                    </div>
+                    <div>
+                        <label class="field-label">Passport / ID</label>
+                        <input type="text" id="editPaxPassport" class="form-input" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" onclick="closeModal('editPassengerModal')" class="btn btn-secondary">Cancel</button>
+                <button type="submit" id="btnEditPaxSubmit" class="btn btn-primary">
+                    <i data-lucide="save" style="width: 14px; height: 14px;"></i>
+                    <span>Save (UPDATE)</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function switchAdminTab(tabId, el) {
+        document.querySelectorAll('.admin-tab-pane').forEach(t => t.style.display = 'none');
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).style.display = 'block';
+        el.classList.add('active');
+        if (window.lucide) lucide.createIcons();
+    }
+
+    // Add Flight (INSERT)
+    async function submitAddFlight(e) {
+        e.preventDefault();
+        const payload = {
+            flight_number: document.getElementById('addFlightNo').value.trim().toUpperCase(),
+            airline_id: parseInt(document.getElementById('addFlightAirline').value),
+            aircraft_id: parseInt(document.getElementById('addFlightAircraft').value),
+            origin_code: document.getElementById('addFlightOrigin').value,
+            destination_code: document.getElementById('addFlightDest').value,
+            departure_time: document.getElementById('addFlightDep').value.replace('T', ' ') + ':00',
+            arrival_time: document.getElementById('addFlightArr').value.replace('T', ' ') + ':00',
+            duration_minutes: parseInt(document.getElementById('addFlightDuration').value),
+            base_fare: parseFloat(document.getElementById('addFlightFare').value),
+            status: document.getElementById('addFlightStatus').value
+        };
+
+        const btn = document.getElementById('btnAddFlightSubmit');
+        btn.disabled = true;
+        try {
+            const res = await fetch('/api/flights', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast(data.message, 'success');
+                closeModal('addFlightModal');
+                setTimeout(() => window.location.reload(), 900);
+            } else {
+                showToast(data.error || 'Failed to insert flight.', 'error');
+            }
+        } catch (err) {
+            showToast('Network error: ' + err.message, 'error');
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    // Edit Flight Modal
+    function openEditFlightModal(id, flightNo, baseFare, status) {
+        document.getElementById('editFlightId').value = id;
+        document.getElementById('editFlightNo').value = flightNo;
+        document.getElementById('editFlightFare').value = baseFare;
+        document.getElementById('editFlightStatus').value = status;
+        openModal('editFlightModal');
+    }
+
+    async function submitEditFlight(e) {
+        e.preventDefault();
+        const id = document.getElementById('editFlightId').value;
+        const payload = {
+            base_fare: parseFloat(document.getElementById('editFlightFare').value),
+            status: document.getElementById('editFlightStatus').value
+        };
+
+        const btn = document.getElementById('btnEditFlightSubmit');
+        btn.disabled = true;
+        try {
+            const res = await fetch(`/api/flights/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast(data.message, 'success');
+                closeModal('editFlightModal');
+                setTimeout(() => window.location.reload(), 900);
+            } else {
+                showToast(data.error || 'Failed to update flight.', 'error');
+            }
+        } catch (err) {
+            showToast('Error: ' + err.message, 'error');
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    // Delete Flight (DELETE)
+    async function deleteFlight(id, flightNo) {
+        if (!confirm(`Are you sure you want to DELETE flight ${flightNo} (ID: ${id}) from the database?`)) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/flights/${id}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.success) {
+                showToast(data.message, 'success');
+                const row = document.getElementById(`flight-row-${id}`);
+                if (row) row.remove();
+            } else {
+                showToast(data.error || 'Failed to delete flight.', 'error');
+            }
+        } catch (err) {
+            showToast('Error: ' + err.message, 'error');
+        }
+    }
+
+    // Edit Passenger Modal
+    function openEditPassengerModal(id, first, last, email, phone, passport) {
+        document.getElementById('editPaxId').value = id;
+        document.getElementById('editPaxFirst').value = first;
+        document.getElementById('editPaxLast').value = last;
+        document.getElementById('editPaxEmail').value = email;
+        document.getElementById('editPaxPhone').value = phone;
+        document.getElementById('editPaxPassport').value = passport;
+        openModal('editPassengerModal');
+    }
+
+    async function submitEditPassenger(e) {
+        e.preventDefault();
+        const id = document.getElementById('editPaxId').value;
+        const payload = {
+            first_name: document.getElementById('editPaxFirst').value.trim(),
+            last_name: document.getElementById('editPaxLast').value.trim(),
+            email: document.getElementById('editPaxEmail').value.trim(),
+            phone: document.getElementById('editPaxPhone').value.trim(),
+            passport_number: document.getElementById('editPaxPassport').value.trim()
+        };
+
+        const btn = document.getElementById('btnEditPaxSubmit');
+        btn.disabled = true;
+        try {
+            const res = await fetch(`/api/passengers/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast(data.message, 'success');
+                closeModal('editPassengerModal');
+                setTimeout(() => window.location.reload(), 900);
+            } else {
+                showToast(data.error || 'Failed to update passenger.', 'error');
+            }
+        } catch (err) {
+            showToast('Error: ' + err.message, 'error');
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    // Delete Passenger (DELETE)
+    async function deletePassenger(id, name) {
+        if (!confirm(`Are you sure you want to DELETE passenger "${name}" (ID: ${id}) from the database?`)) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/passengers/${id}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.success) {
+                showToast(data.message, 'success');
+                const row = document.getElementById(`passenger-row-${id}`);
+                if (row) row.remove();
+            } else {
+                showToast(data.error || 'Failed to delete passenger.', 'error');
+            }
+        } catch (err) {
+            showToast('Error: ' + err.message, 'error');
+        }
+    }
+</script>
+{% endblock %}

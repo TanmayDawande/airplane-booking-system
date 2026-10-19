@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Search Flights | SkyReserve{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: 280px 1fr; gap: 2rem; align-items: start;">
+    <!-- Filter Sidebar -->
+    <aside class="card" style="position: sticky; top: 5rem;">
+        <h3 style="margin-bottom: 1rem; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i data-lucide="filter" style="width: 16px; height: 16px; color: #3b82f6;"></i>
+            <span>Filter Flights</span>
+        </h3>
+
+        <form action="{{ url_for('flights_page') }}" method="GET">
+            <div class="field-group" style="margin-bottom: 0.75rem;">
+                <label class="field-label">Origin</label>
+                <select name="origin" class="field-select">
+                    <option value="">All Origins</option>
+                    {% for a in airports %}
+                        <option value="{{ a.airport_code }}" {% if origin == a.airport_code %}selected{% endif %}>
+                            {{ a.city }} ({{ a.airport_code }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="field-group" style="margin-bottom: 0.75rem;">
+                <label class="field-label">Destination</label>
+                <select name="destination" class="field-select">
+                    <option value="">All Destinations</option>
+                    {% for a in airports %}
+                        <option value="{{ a.airport_code }}" {% if dest == a.airport_code %}selected{% endif %}>
+                            {{ a.city }} ({{ a.airport_code }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="field-group" style="margin-bottom: 0.75rem;">
+                <label class="field-label">Travel Date</label>
+                <input type="date" name="date" class="field-input" value="{{ travel_date }}">
+            </div>
+
+            <div class="field-group" style="margin-bottom: 0.75rem;">
+                <label class="field-label">Max Base Fare (₹)</label>
+                <input type="number" name="max_price" class="field-input" placeholder="e.g. 10000" value="{{ max_price }}">
+            </div>
+
+            <div class="field-group" style="margin-bottom: 1.25rem;">
+                <label class="field-label">Cabin Class</label>
+                <select name="class" class="field-select">
+                    <option value="ECONOMY" {% if travel_class == 'ECONOMY' %}selected{% endif %}>Economy</option>
+                    <option value="BUSINESS" {% if travel_class == 'BUSINESS' %}selected{% endif %}>Business</option>
+                    <option value="FIRST" {% if travel_class == 'FIRST' %}selected{% endif %}>First Class</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 0.5rem;">
+                Apply Filters
+            </button>
+            <a href="{{ url_for('flights_page') }}" class="btn btn-secondary btn-sm" style="width: 100%; text-align: center;">
+                Reset
+            </a>
+        </form>
+    </aside>
+
+    <!-- Flight Results Section -->
+    <section>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <div>
+                <h2>Available Flights</h2>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">
+                    Found <strong>{{ flights|length }}</strong> scheduled flights
+                </p>
+            </div>
+            <div>
+                <a href="{{ url_for('admin_page') }}#add-flight" class="btn btn-secondary btn-sm">
+                    <i data-lucide="plus" style="width: 14px; height: 14px;"></i>
+                    <span>Add Flight (Admin)</span>
+                </a>
+            </div>
+        </div>
+
+        {% if flights %}
+        <div>
+            {% for f in flights %}
+            <div class="flight-card">
+                <div class="airline-info">
+                    <div class="airline-logo-box">{{ f.airline_code }}</div>
+                    <div>
+                        <div style="font-weight: 700; color: #fff;">{{ f.airline_name }}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-code);">
+                            {{ f.flight_number }} • {{ f.aircraft_model }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="route-display">
+                    <div style="text-align: right;">
+                        <div class="route-time">{{ f.departure_time.split(' ')[1][:5] if ' ' in f.departure_time|string else f.departure_time }}</div>
+                        <div class="route-city">{{ f.origin_city }} ({{ f.origin_code }})</div>
+                    </div>
+
+                    <div class="route-connector">
+                        <span style="font-size: 0.72rem; color: var(--text-dim); font-weight: 500;">
+                            {{ f.duration_mins // 60 }}h {{ f.duration_mins % 60 }}m
+                        </span>
+                        <div class="route-line"></div>
+                        <span style="font-size: 0.7rem; color: #10b981; font-weight: 600;">Non-stop</span>
+                    </div>
+
+                    <div style="text-align: left;">
+                        <div class="route-time">{{ f.arrival_time.split(' ')[1][:5] if ' ' in f.arrival_time|string else f.arrival_time }}</div>
+                        <div class="route-city">{{ f.dest_city }} ({{ f.destination_code }})</div>
+                    </div>
+                </div>
+
+                <div class="price-box">
+                    <div class="price-val">₹{{ "{:,.0f}".format(f.base_fare) }}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+                        {{ f.available_seats }} seats left
+                    </div>
+                    <a href="{{ url_for('booking_page', flight_id=f.flight_id) }}" class="btn btn-primary btn-sm">
+                        Select
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="card" style="text-align: center; padding: 3rem;">
+            <p style="color: var(--text-muted); margin-bottom: 1rem;">No flights matched your filter selection.</p>
+            <a href="{{ url_for('flights_page') }}" class="btn btn-secondary btn-sm">Clear Filters</a>
+        </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}
