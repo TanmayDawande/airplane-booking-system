@@ -4,7 +4,9 @@ from database import db
 from models import UserModel, PassengerModel, FlightModel, BookingModel, ReportsModel
 import config
 
-app = Flask(__name__)
+# Static files live in public/static so Vercel's CDN serves them; Flask serves
+# the same folder at /static when you run the app locally.
+app = Flask(__name__, static_folder='public/static')
 app.secret_key = config.SECRET_KEY
 
 # ------------------------------------------------------------------------------
