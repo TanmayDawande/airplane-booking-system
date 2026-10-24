@@ -1,31 +1,24 @@
 {% extends "base.html" %}
+{% from "_macros.html" import state %}
 
-{% block title %}DBMS Queries & Reports | SkyReserve{% endblock %}
+{% block title %}Reports | SkyReserve{% endblock %}
 
 {% block content %}
-<div style="margin-bottom: 2rem;">
-    <h2>Database Queries & Analytical Reports</h2>
-    <p class="subtitle">
-        Assessments 9 & 10: Multi-table JOINs, GROUP BY aggregations with HAVING, subqueries, and mathematical calculations.
-    </p>
-</div>
+<section class="page-head">
+    <h1 class="title-md">Queries and reports</h1>
+    <p class="subtitle">Multi-table joins, grouped aggregates and a nested subquery, run live against the bookings data.</p>
+</section>
 
-<!-- Report 1: Revenue by Airline -->
-<div class="card">
-    <div style="margin-bottom: 1rem;">
-        <span class="assessment-badge" style="color: #60a5fa; margin-bottom: 0.35rem;">
-            JOIN + GROUP BY + Aggregation
-        </span>
-        <h3 style="margin-top: 0.25rem;">1. Airline Revenue & Ticket Yield</h3>
-        <p style="color: var(--text-muted); font-size: 0.85rem;">
-            Calculates total flights, confirmed bookings, gross revenue, and average ticket yield per airline.
-        </p>
-    </div>
+<section class="report">
+    <header class="report-head">
+        <h2>Revenue by airline</h2>
+        <p>Flights flown, confirmed bookings, gross revenue and average ticket fare for each carrier.</p>
+        <span class="tag">JOIN, GROUP BY, aggregates</span>
+    </header>
 
-    <details style="margin-bottom: 1.25rem; background: var(--bg-card); border-radius: var(--radius-sm); border: 1px solid var(--border); padding: 0.75rem 1rem;">
-        <summary style="cursor: pointer; font-size: 0.8rem; font-weight: 600; color: #60a5fa;">View SQL Query</summary>
-        <pre style="margin-top: 0.75rem; font-family: var(--font-code); font-size: 0.8rem; color: #e5e7eb; overflow-x: auto; line-height: 1.5;">
-SELECT 
+    <details class="sql">
+        <summary>View SQL</summary>
+        <pre>SELECT 
     al.airline_code,
     al.airline_name,
     COUNT(DISTINCT f.flight_id) AS scheduled_flights,
@@ -45,44 +38,38 @@ ORDER BY total_revenue DESC;</pre>
                 <tr>
                     <th>Airline</th>
                     <th>Code</th>
-                    <th>Flights</th>
-                    <th>Confirmed Bookings</th>
-                    <th>Total Revenue</th>
-                    <th>Average Ticket Fare</th>
+                    <th class="num">Flights</th>
+                    <th class="num">Confirmed bookings</th>
+                    <th class="num">Total revenue</th>
+                    <th class="num">Average fare</th>
                 </tr>
             </thead>
             <tbody>
                 {% for r in rev_by_airline %}
                 <tr>
-                    <td style="font-weight: 600; color: #fff;">{{ r.airline_name }}</td>
-                    <td style="font-family: var(--font-code); color: #60a5fa;">{{ r.airline_code }}</td>
-                    <td>{{ r.scheduled_flights }}</td>
-                    <td>{{ r.confirmed_bookings }}</td>
-                    <td style="font-family: var(--font-code); font-weight: 600; color: #10b981;">₹{{ "{:,.2f}".format(r.total_revenue) }}</td>
-                    <td style="font-family: var(--font-code);">₹{{ "{:,.2f}".format(r.average_ticket_fare) }}</td>
+                    <td class="strong">{{ r.airline_name }}</td>
+                    <td class="code sub">{{ r.airline_code }}</td>
+                    <td class="num">{{ r.scheduled_flights }}</td>
+                    <td class="num">{{ r.confirmed_bookings }}</td>
+                    <td class="num strong">₹{{ "{:,.2f}".format(r.total_revenue) }}</td>
+                    <td class="num">₹{{ "{:,.2f}".format(r.average_ticket_fare) }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-</div>
+</section>
 
-<!-- Report 2: Route Occupancy -->
-<div class="card">
-    <div style="margin-bottom: 1rem;">
-        <span class="assessment-badge" style="color: #38bdf8; margin-bottom: 0.35rem;">
-            5-Table JOIN + Mathematical Expression
-        </span>
-        <h3 style="margin-top: 0.25rem;">2. Flight Seat Occupancy & Capacity Utilization</h3>
-        <p style="color: var(--text-muted); font-size: 0.85rem;">
-            Computes booked vs available seats and calculates occupancy percentages across routes.
-        </p>
-    </div>
+<section class="report">
+    <header class="report-head">
+        <h2>Seat occupancy by flight</h2>
+        <p>Booked and open seats against aircraft capacity, with the share of the cabin filled.</p>
+        <span class="tag">Five-table JOIN, calculated column</span>
+    </header>
 
-    <details style="margin-bottom: 1.25rem; background: var(--bg-card); border-radius: var(--radius-sm); border: 1px solid var(--border); padding: 0.75rem 1rem;">
-        <summary style="cursor: pointer; font-size: 0.8rem; font-weight: 600; color: #60a5fa;">View SQL Query</summary>
-        <pre style="margin-top: 0.75rem; font-family: var(--font-code); font-size: 0.8rem; color: #e5e7eb; overflow-x: auto; line-height: 1.5;">
-SELECT 
+    <details class="sql">
+        <summary>View SQL</summary>
+        <pre>SELECT 
     f.flight_number, al.airline_name, orig.city AS origin_city, dest.city AS dest_city,
     ac.model AS aircraft_model, ac.total_seats,
     COUNT(CASE WHEN b.status = 'CONFIRMED' THEN b.booking_id END) AS booked_seats,
@@ -106,49 +93,41 @@ ORDER BY booked_seats DESC;</pre>
                     <th>Flight</th>
                     <th>Route</th>
                     <th>Aircraft</th>
-                    <th>Total Seats</th>
-                    <th>Booked</th>
-                    <th>Available</th>
-                    <th>Occupancy</th>
-                    <th>Flight Revenue</th>
+                    <th class="num">Seats</th>
+                    <th class="num">Booked</th>
+                    <th class="num">Open</th>
+                    <th class="num">Occupancy</th>
+                    <th class="num">Revenue</th>
                 </tr>
             </thead>
             <tbody>
                 {% for o in occupancy %}
                 <tr>
-                    <td style="font-family: var(--font-code); font-weight: 600; color: #60a5fa;">{{ o.flight_number }}</td>
-                    <td>{{ o.origin_city }} &rarr; {{ o.dest_city }}</td>
-                    <td style="font-size: 0.8rem; color: var(--text-muted);">{{ o.aircraft_model }}</td>
-                    <td style="font-family: var(--font-code);">{{ o.total_seats }}</td>
-                    <td style="font-family: var(--font-code); font-weight: 600;">{{ o.booked_seats }}</td>
-                    <td style="font-family: var(--font-code); color: var(--text-muted);">{{ o.available_seats }}</td>
-                    <td>
-                        <span style="font-family: var(--font-code); font-weight: 600;">{{ o.occupancy_pct }}%</span>
-                    </td>
-                    <td style="font-family: var(--font-code); font-weight: 600; color: #10b981;">₹{{ "{:,.0f}".format(o.flight_revenue) }}</td>
+                    <td class="code strong">{{ o.flight_number }}</td>
+                    <td class="nowrap">{{ o.origin_city }} <span class="dim">to</span> {{ o.dest_city }}</td>
+                    <td class="sub">{{ o.aircraft_model }}</td>
+                    <td class="num">{{ o.total_seats }}</td>
+                    <td class="num strong">{{ o.booked_seats }}</td>
+                    <td class="num sub">{{ o.available_seats }}</td>
+                    <td class="num">{{ o.occupancy_pct }}%</td>
+                    <td class="num strong">₹{{ "{:,.0f}".format(o.flight_revenue) }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-</div>
+</section>
 
-<!-- Report 3: High-Value Passengers -->
-<div class="card">
-    <div style="margin-bottom: 1rem;">
-        <span class="assessment-badge" style="color: #a78bfa; margin-bottom: 0.35rem;">
-            Nested Subquery Filter
-        </span>
-        <h3 style="margin-top: 0.25rem;">3. High-Value Passengers (Above Average Fare)</h3>
-        <p style="color: var(--text-muted); font-size: 0.85rem;">
-            Identifies passengers whose booking spend exceeds the overall average ticket price.
-        </p>
-    </div>
+<section class="report">
+    <header class="report-head">
+        <h2>Passengers above the average fare</h2>
+        <p>Confirmed bookings that cost more than the average confirmed ticket.</p>
+        <span class="tag">Nested subquery</span>
+    </header>
 
-    <details style="margin-bottom: 1.25rem; background: var(--bg-card); border-radius: var(--radius-sm); border: 1px solid var(--border); padding: 0.75rem 1rem;">
-        <summary style="cursor: pointer; font-size: 0.8rem; font-weight: 600; color: #60a5fa;">View SQL Query</summary>
-        <pre style="margin-top: 0.75rem; font-family: var(--font-code); font-size: 0.8rem; color: #e5e7eb; overflow-x: auto; line-height: 1.5;">
-SELECT 
+    <details class="sql">
+        <summary>View SQL</summary>
+        <pre>SELECT 
     p.passenger_id,
     CONCAT(p.first_name, ' ', p.last_name) AS full_name,
     p.email, p.phone, b.pnr, b.total_amount, b.travel_class
@@ -167,27 +146,29 @@ ORDER BY b.total_amount DESC;</pre>
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>Passenger ID</th>
+                    <th>ID</th>
                     <th>Name</th>
                     <th>Email</th>
                     <th>PNR</th>
                     <th>Class</th>
-                    <th>Fare Amount</th>
+                    <th class="num">Fare</th>
                 </tr>
             </thead>
             <tbody>
                 {% for p in high_value_pax %}
                 <tr>
-                    <td style="font-family: var(--font-code);">#{{ p.passenger_id }}</td>
-                    <td style="font-weight: 600; color: #fff;">{{ p.full_name }}</td>
-                    <td style="color: #60a5fa;">{{ p.email }}</td>
-                    <td style="font-family: var(--font-code); font-weight: 700; color: #a78bfa;">{{ p.pnr }}</td>
-                    <td>{{ p.travel_class }}</td>
-                    <td style="font-family: var(--font-code); font-weight: 600; color: #10b981;">₹{{ "{:,.2f}".format(p.total_amount) }}</td>
+                    <td class="id">{{ p.passenger_id }}</td>
+                    <td class="strong">{{ p.full_name }}</td>
+                    <td class="sub">{{ p.email }}</td>
+                    <td class="code accent">{{ p.pnr }}</td>
+                    <td class="sub">{{ p.travel_class|capitalize }}</td>
+                    <td class="num strong">₹{{ "{:,.2f}".format(p.total_amount) }}</td>
                 </tr>
+                {% else %}
+                <tr><td colspan="6" class="sub">No booking is above the average fare yet.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-</div>
+</section>
 {% endblock %}

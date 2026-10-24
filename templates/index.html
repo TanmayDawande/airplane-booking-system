@@ -1,171 +1,77 @@
 {% extends "base.html" %}
+{% from "_macros.html" import flight_row %}
 
-{% block title %}Search Flights | SkyReserve{% endblock %}
+{% block title %}Search flights | SkyReserve{% endblock %}
 
 {% block content %}
-<!-- Page Header -->
-<div style="margin-bottom: 2rem;">
-    <h1>Find and Book Flights</h1>
-    <p class="subtitle" style="margin-bottom: 0;">
-        Search scheduled domestic and international routes with instant seat confirmation.
-    </p>
-</div>
+<section class="page-head">
+    <h1>Find a flight</h1>
+    <p class="subtitle">Choose a route and a date. You pick your seat on the next screen.</p>
+</section>
 
-<!-- Flight Search Box (Google Flights Style) -->
-<div class="search-container">
-    <div class="trip-type-selector">
-        <button type="button" class="trip-pill active">One Way</button>
-        <button type="button" class="trip-pill">Round Trip</button>
+<form class="search-bar" action="{{ url_for('flights_page') }}" method="GET">
+    <label class="field">
+        <span class="field-label">From</span>
+        <select name="origin" class="field-select">
+            <option value="">Any airport</option>
+            {% for a in airports %}
+            <option value="{{ a.airport_code }}" {% if a.airport_code == 'BOM' %}selected{% endif %}>{{ a.city }} ({{ a.airport_code }})</option>
+            {% endfor %}
+        </select>
+    </label>
+
+    <label class="field">
+        <span class="field-label">To</span>
+        <select name="destination" class="field-select">
+            <option value="">Any airport</option>
+            {% for a in airports %}
+            <option value="{{ a.airport_code }}" {% if a.airport_code == 'DEL' %}selected{% endif %}>{{ a.city }} ({{ a.airport_code }})</option>
+            {% endfor %}
+        </select>
+    </label>
+
+    <label class="field">
+        <span class="field-label">Departure date</span>
+        <input type="date" name="date" class="field-input" value="2026-10-28">
+    </label>
+
+    <label class="field">
+        <span class="field-label">Cabin</span>
+        <select name="class" class="field-select">
+            <option value="ECONOMY">Economy</option>
+            <option value="BUSINESS">Business</option>
+            <option value="FIRST">First</option>
+        </select>
+    </label>
+
+    <button type="submit" class="btn btn-primary btn-lg">Search flights</button>
+</form>
+
+<p class="network-line">
+    <span><b>{{ stats.airports }}</b>airports</span>
+    <span><b>{{ stats.airlines }}</b>airlines</span>
+    <span><b>{{ stats.flights }}</b>scheduled flights</span>
+    <span><b>{{ stats.passengers }}</b>passengers</span>
+</p>
+
+<section class="departures">
+    <div class="section-head">
+        <h2>Departures</h2>
+        <a href="{{ url_for('flights_page') }}" class="link">View all flights</a>
     </div>
 
-    <form action="{{ url_for('flights_page') }}" method="GET">
-        <div class="search-fields-grid">
-            <!-- Departure -->
-            <div class="field-group">
-                <label class="field-label">
-                    <i data-lucide="map-pin" style="width: 11px; height: 11px;"></i>
-                    From
-                </label>
-                <select name="origin" class="field-select">
-                    <option value="">Any City / Airport</option>
-                    {% for a in airports %}
-                        <option value="{{ a.airport_code }}" {% if a.airport_code == 'BOM' %}selected{% endif %}>
-                            {{ a.city }} ({{ a.airport_code }})
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <!-- Destination -->
-            <div class="field-group">
-                <label class="field-label">
-                    <i data-lucide="navigation" style="width: 11px; height: 11px;"></i>
-                    To
-                </label>
-                <select name="destination" class="field-select">
-                    <option value="">Any City / Airport</option>
-                    {% for a in airports %}
-                        <option value="{{ a.airport_code }}" {% if a.airport_code == 'DEL' %}selected{% endif %}>
-                            {{ a.city }} ({{ a.airport_code }})
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <!-- Date -->
-            <div class="field-group">
-                <label class="field-label">
-                    <i data-lucide="calendar" style="width: 11px; height: 11px;"></i>
-                    Departure Date
-                </label>
-                <input type="date" name="date" class="field-input" value="2026-10-28">
-            </div>
-
-            <!-- Class -->
-            <div class="field-group">
-                <label class="field-label">
-                    <i data-lucide="user" style="width: 11px; height: 11px;"></i>
-                    Travel Class
-                </label>
-                <select name="class" class="field-select">
-                    <option value="ECONOMY">Economy</option>
-                    <option value="BUSINESS">Business</option>
-                    <option value="FIRST">First Class</option>
-                </select>
-            </div>
-
-            <!-- Search Action -->
-            <div>
-                <button type="submit" class="btn btn-primary" style="height: 48px; padding: 0 1.5rem;">
-                    <i data-lucide="search" style="width: 15px; height: 15px;"></i>
-                    <span>Search</span>
-                </button>
-            </div>
-        </div>
-    </form>
-</div>
-
-<!-- Quick Stats Row -->
-<div class="stats-row">
-    <div class="stat-card">
-        <div class="stat-title">Connected Hubs</div>
-        <div class="stat-value">{{ stats.airports }}</div>
-        <div style="font-size: 0.72rem; color: var(--text-dim);">DEL, BOM, BLR, DXB, JFK</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-title">Partner Airlines</div>
-        <div class="stat-value">{{ stats.airlines }}</div>
-        <div style="font-size: 0.72rem; color: var(--text-dim);">Air India, IndiGo, Vistara...</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-title">Daily Departures</div>
-        <div class="stat-value">{{ stats.flights }}</div>
-        <div style="font-size: 0.72rem; color: var(--text-dim);">Active scheduled flights</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-title">Passengers Served</div>
-        <div class="stat-value">{{ stats.passengers }}</div>
-        <div style="font-size: 0.72rem; color: var(--text-dim);">Confirmed bookings</div>
-    </div>
-</div>
-
-<!-- Scheduled Flights List -->
-<div>
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-        <div>
-            <h2>Scheduled Flights</h2>
-            <p style="color: var(--text-muted); font-size: 0.82rem; margin: 0;">Featured domestic and international departures</p>
-        </div>
-        <a href="{{ url_for('flights_page') }}" class="btn btn-secondary btn-sm">
-            <span>View All</span>
-            <i data-lucide="chevron-right" style="width: 13px; height: 13px;"></i>
-        </a>
-    </div>
-
-    <div>
+    {% if featured_flights %}
+    <div class="flight-list">
         {% for f in featured_flights %}
-        <div class="flight-card">
-            <div class="airline-info">
-                <div class="airline-logo-box">{{ f.airline_code }}</div>
-                <div>
-                    <div style="font-weight: 700; color: #fff;">{{ f.airline_name }}</div>
-                    <div style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-code);">{{ f.flight_number }} • {{ f.aircraft_model }}</div>
-                </div>
-            </div>
-
-            <!-- Route & Times -->
-            <div class="route-display">
-                <div style="text-align: right;">
-                    <div class="route-time">{{ f.departure_time.split(' ')[1][:5] if ' ' in f.departure_time|string else f.departure_time }}</div>
-                    <div class="route-city">{{ f.origin_city }} ({{ f.origin_code }})</div>
-                </div>
-
-                <div class="route-connector">
-                    <span style="font-size: 0.68rem; color: var(--text-dim); font-weight: 500;">
-                        {{ f.duration_mins // 60 }}h {{ f.duration_mins % 60 }}m
-                    </span>
-                    <div class="route-line"></div>
-                    <span style="font-size: 0.68rem; color: #10b981; font-weight: 600;">Non-stop</span>
-                </div>
-
-                <div style="text-align: left;">
-                    <div class="route-time">{{ f.arrival_time.split(' ')[1][:5] if ' ' in f.arrival_time|string else f.arrival_time }}</div>
-                    <div class="route-city">{{ f.dest_city }} ({{ f.destination_code }})</div>
-                </div>
-            </div>
-
-            <!-- Price & Button -->
-            <div class="price-box">
-                <div class="price-val">₹{{ "{:,.0f}".format(f.base_fare) }}</div>
-                <div style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 0.4rem;">
-                    {{ f.available_seats }} seats left
-                </div>
-                <a href="{{ url_for('booking_page', flight_id=f.flight_id) }}" class="btn btn-primary btn-sm">
-                    Select
-                </a>
-            </div>
-        </div>
+        {{ flight_row(f) }}
         {% endfor %}
     </div>
-</div>
+    {% else %}
+    <div class="empty">
+        <h3>No departures scheduled</h3>
+        <p>Add a flight from the admin page and it will show up here.</p>
+        <a href="{{ url_for('admin_page') }}" class="btn btn-secondary btn-sm">Open admin</a>
+    </div>
+    {% endif %}
+</section>
 {% endblock %}

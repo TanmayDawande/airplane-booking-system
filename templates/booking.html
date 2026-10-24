@@ -1,111 +1,59 @@
 {% extends "base.html" %}
+{% from "_macros.html" import flight_row %}
 
-{% block title %}Select Seat • Flight {{ flight.flight_number }} | SkyReserve{% endblock %}
+{% block title %}Reserve {{ flight.flight_number }} | SkyReserve{% endblock %}
 
 {% block content %}
-<div style="margin-bottom: 1.25rem;">
-    <a href="{{ url_for('flights_page') }}" class="btn btn-secondary btn-sm" style="margin-bottom: 0.65rem;">
-        <i data-lucide="arrow-left" style="width: 13px; height: 13px;"></i>
-        <span>Back to Flights</span>
-    </a>
-    <h2>Flight Reservation — {{ flight.flight_number }}</h2>
-    <p class="subtitle" style="margin-bottom: 0;">
-        Select your seat on the aircraft cabin map, enter passenger information, and confirm the transaction.
-    </p>
-</div>
+<section class="page-head">
+    <a href="{{ url_for('flights_page') }}" class="back">All flights</a>
+    <h2>Reserve {{ flight.flight_number }}</h2>
+    <p class="subtitle">Pick a seat, add the passenger's details, then confirm and pay.</p>
+</section>
 
-<!-- Flight Details Card -->
-<div class="card" style="margin-bottom: 1.5rem;">
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-        <div style="display: flex; align-items: center; gap: 0.75rem;">
-            <div class="airline-logo-box" style="width: 44px; height: 44px; font-size: 1rem;">
-                {{ flight.airline_code }}
-            </div>
+{{ flight_row(flight, summary=True) }}
+
+<div class="booking-layout">
+    <!-- Seat map -->
+    <section aria-label="Seat map">
+        <div class="step-head">
             <div>
-                <div style="font-weight: 700; color: #fff; font-size: 1.1rem;">{{ flight.airline_name }}</div>
-                <div style="font-size: 0.78rem; color: var(--text-muted); font-family: var(--font-code);">
-                    Flight {{ flight.flight_number }} • {{ flight.aircraft_model }}
-                </div>
+                <h3>1. Choose a seat</h3>
+                <p>Select any open seat in the cabin.</p>
             </div>
+            <span class="seat-chip"><span id="selectedSeatBadgeText">No seat selected</span></span>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 1.75rem;">
-            <div style="text-align: right;">
-                <div style="font-size: 1.35rem; font-weight: 700; font-family: var(--font-code); color: #fff;">{{ flight.origin_code }}</div>
-                <div style="font-size: 0.75rem; color: var(--text-muted);">{{ flight.origin_city }}</div>
-            </div>
-
-            <div class="route-connector">
-                <span style="font-size: 0.68rem; color: var(--text-dim);">{{ flight.duration_mins // 60 }}h {{ flight.duration_mins % 60 }}m</span>
-                <div class="route-line" style="width: 70px;"></div>
-                <span style="font-size: 0.68rem; color: #10b981;">Non-stop</span>
-            </div>
-
-            <div style="text-align: left;">
-                <div style="font-size: 1.35rem; font-weight: 700; font-family: var(--font-code); color: #fff;">{{ flight.destination_code }}</div>
-                <div style="font-size: 0.75rem; color: var(--text-muted);">{{ flight.dest_city }}</div>
-            </div>
+        <div class="segmented" role="group" aria-label="Jump to a cabin">
+            <button type="button" onclick="scrollToRow(1)">First</button>
+            <button type="button" onclick="scrollToRow(3)">Business</button>
+            <button type="button" onclick="scrollToRow(6)">Economy</button>
+            <button type="button" onclick="scrollToRow(11)">Exit rows</button>
         </div>
 
-        <div style="text-align: right;">
-            <span style="font-size: 0.72rem; color: var(--text-muted);">Base Economy Fare</span>
-            <div style="font-size: 1.4rem; font-weight: 700; color: #fff; font-family: var(--font-code);">
-                ₹{{ "{:,.0f}".format(flight.base_fare) }}
-            </div>
-        </div>
-    </div>
-</div>
-
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start;">
-    <!-- Seat Selection Fuselage -->
-    <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <div>
-                <h3>1. Select Seat</h3>
-                <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0;">Click an available seat in the cabin</p>
-            </div>
-            <div style="background: #111111; border: 1px solid var(--border); padding: 0.3rem 0.65rem; border-radius: var(--radius-sm); font-size: 0.8rem; font-family: var(--font-code); color: #60a5fa; font-weight: 600;">
-                <span id="selectedSeatBadgeText">No Seat Selected</span>
-            </div>
-        </div>
-
-        <!-- Jump to Section Pills -->
-        <div style="display: flex; gap: 0.35rem; margin-bottom: 1rem; flex-wrap: wrap;">
-            <button type="button" class="btn btn-secondary btn-sm" onclick="scrollToRow(1)" style="font-size: 0.72rem; padding: 0.2rem 0.5rem;">First (1-2)</button>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="scrollToRow(3)" style="font-size: 0.72rem; padding: 0.2rem 0.5rem;">Business (3-5)</button>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="scrollToRow(6)" style="font-size: 0.72rem; padding: 0.2rem 0.5rem;">Economy (6-24)</button>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="scrollToRow(11)" style="font-size: 0.72rem; padding: 0.2rem 0.5rem;">Exit Row (11-12)</button>
-        </div>
-
-        <!-- Realistic Airplane Viewport -->
         <div class="airplane-viewport" id="airplaneViewport">
             <div class="airplane-body">
-                <!-- Nose & Cockpit -->
-                <div class="airplane-nose">
+                <div class="airplane-nose" aria-hidden="true">
                     <div class="cockpit-windows">
-                        <div class="cockpit-window"></div>
-                        <div class="cockpit-window"></div>
-                        <div class="cockpit-window"></div>
+                        <span class="cockpit-window"></span>
+                        <span class="cockpit-window"></span>
+                        <span class="cockpit-window"></span>
                     </div>
-                    <span class="cockpit-label">Cockpit / Nose</span>
                 </div>
 
-                <!-- Forward Utility Bar -->
                 <div class="cabin-utility-bar">
-                    <span class="door-tag"><i data-lucide="log-out" style="width: 11px; height: 11px;"></i> DOOR 1L</span>
-                    <span>FWD GALLEY & LAVATORIES</span>
-                    <span class="door-tag">DOOR 1R <i data-lucide="log-out" style="width: 11px; height: 11px;"></i></span>
+                    <span>Door 1L</span>
+                    <span>Front galley and lavatories</span>
+                    <span>Door 1R</span>
                 </div>
 
-                <!-- Column Header Strip -->
                 <div class="fuselage-tube">
-                    <div class="cabin-col-headers">
+                    <div class="cabin-col-headers" aria-hidden="true">
                         <div class="col-triplet">
                             <span>A</span>
                             <span>B</span>
                             <span>C</span>
                         </div>
-                        <div class="col-aisle-spacer">AISLE</div>
+                        <div class="col-aisle-spacer">Aisle</div>
                         <div class="col-triplet">
                             <span>D</span>
                             <span>E</span>
@@ -113,57 +61,50 @@
                         </div>
                     </div>
 
-                    <!-- Row-by-Row Seating (Rows 1 to 24) -->
                     {% for r in seat_rows %}
-                        <!-- Section Headers -->
                         {% if r.row_num == 1 %}
                         <div class="cabin-class-divider">
-                            <span class="cabin-class-label">First Class • Rows 1-2</span>
+                            <span class="cabin-class-label">First, rows 1 to 2</span>
                         </div>
                         {% elif r.row_num == 3 %}
                         <div class="cabin-class-divider">
-                            <span class="cabin-class-label">Business Class • Rows 3-5</span>
+                            <span class="cabin-class-label">Business, rows 3 to 5</span>
                         </div>
                         {% elif r.row_num == 6 %}
                         <div class="cabin-class-divider">
-                            <span class="cabin-class-label">Economy Main Cabin • Rows 6-24</span>
+                            <span class="cabin-class-label">Economy, rows 6 to 24</span>
                         </div>
                         {% elif r.row_num == 11 %}
-                        <div class="cabin-class-divider" style="border-color: rgba(239, 68, 68, 0.3);">
-                            <span class="cabin-class-label" style="color: #f87171;">Overwing Exit • Rows 11-12 (Extra Legroom)</span>
+                        <div class="cabin-class-divider exit">
+                            <span class="cabin-class-label">Exit rows 11 and 12, extra legroom</span>
                         </div>
                         {% endif %}
 
                         <div class="fuselage-row {% if r.is_exit_row %}exit-row{% endif %}" id="row-{{ r.row_num }}">
-                            <!-- Left 3 Seats: A, B, C -->
                             <div class="seat-group">
                                 {% for s in r.left_seats %}
-                                <button type="button" 
+                                <button type="button"
                                         class="seat {% if s.is_booked %}booked{% endif %}"
                                         data-seat="{{ s.seat_number }}"
                                         data-class="{{ s.seat_class }}"
                                         data-type="{{ s.seat_type }}"
-                                        title="Seat {{ s.seat_number }} ({{ s.seat_class }} • {{ s.seat_type }}){% if s.is_booked %} [Occupied]{% endif %}"
+                                        title="Seat {{ s.seat_number }} ({{ s.seat_class }}, {{ s.seat_type }}){% if s.is_booked %}, occupied{% endif %}"
                                         {% if s.is_booked %}disabled{% endif %}>
                                     {{ s.seat_number }}
                                 </button>
                                 {% endfor %}
                             </div>
 
-                            <!-- Center Aisle with Row Number -->
-                            <div class="aisle-number">
-                                {{ r.row_num }}
-                            </div>
+                            <div class="aisle-number">{{ r.row_num }}</div>
 
-                            <!-- Right 3 Seats: D, E, F -->
                             <div class="seat-group">
                                 {% for s in r.right_seats %}
-                                <button type="button" 
+                                <button type="button"
                                         class="seat {% if s.is_booked %}booked{% endif %}"
                                         data-seat="{{ s.seat_number }}"
                                         data-class="{{ s.seat_class }}"
                                         data-type="{{ s.seat_type }}"
-                                        title="Seat {{ s.seat_number }} ({{ s.seat_class }} • {{ s.seat_type }}){% if s.is_booked %} [Occupied]{% endif %}"
+                                        title="Seat {{ s.seat_number }} ({{ s.seat_class }}, {{ s.seat_type }}){% if s.is_booked %}, occupied{% endif %}"
                                         {% if s.is_booked %}disabled{% endif %}>
                                     {{ s.seat_number }}
                                 </button>
@@ -173,131 +114,112 @@
                     {% endfor %}
                 </div>
 
-                <!-- Aft Utility Bar -->
-                <div class="cabin-utility-bar">
-                    <span class="door-tag"><i data-lucide="log-out" style="width: 11px; height: 11px;"></i> DOOR 2L</span>
-                    <span>AFT GALLEY & LAVATORIES</span>
-                    <span class="door-tag">DOOR 2R <i data-lucide="log-out" style="width: 11px; height: 11px;"></i></span>
+                <div class="cabin-utility-bar aft">
+                    <span>Door 2L</span>
+                    <span>Rear galley and lavatories</span>
+                    <span>Door 2R</span>
                 </div>
 
-                <!-- Airplane Tail Cone -->
-                <div class="airplane-tail">
-                    <span>AFT TAIL CONE / APU</span>
-                </div>
+                <div class="airplane-tail" aria-hidden="true"></div>
             </div>
         </div>
 
-        <!-- Cabin Legend -->
-        <div style="display: flex; justify-content: center; gap: 1.5rem; margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border); font-size: 0.72rem; color: var(--text-muted);">
-            <div style="display: flex; align-items: center; gap: 0.35rem;">
-                <div style="width: 13px; height: 13px; background: #111111; border: 1px solid #222222; border-radius: 3px;"></div>
-                <span>Available</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 0.35rem;">
-                <div style="width: 13px; height: 13px; background: #2563eb; border-radius: 3px;"></div>
-                <span>Selected</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 0.35rem;">
-                <div style="width: 13px; height: 13px; background: #0f0707; border: 1px solid #291212; border-radius: 3px;"></div>
-                <span>Occupied</span>
-            </div>
+        <div class="cabin-legend">
+            <span><i class="swatch"></i>Available</span>
+            <span><i class="swatch selected"></i>Selected</span>
+            <span><i class="swatch booked"></i>Occupied</span>
         </div>
-    </div>
+    </section>
 
-    <!-- Passenger Form & Payment -->
-    <div class="card">
-        <h3 style="margin-bottom: 0.25rem;">2. Passenger Information & Payment</h3>
-        <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1.25rem;">Enter traveler details to confirm reservation</p>
-
-        <form id="bookingForm" onsubmit="submitBookingFlow(event)">
-            <input type="hidden" id="bookingFlightId" value="{{ flight.flight_id }}">
-            <input type="hidden" id="selectedSeatInput" value="">
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; margin-bottom: 0.65rem;">
-                <div class="field-group">
-                    <label class="field-label">First Name</label>
-                    <input type="text" id="paxFirstName" class="field-input" required placeholder="e.g. Tanmay">
-                </div>
-                <div class="field-group">
-                    <label class="field-label">Last Name</label>
-                    <input type="text" id="paxLastName" class="field-input" required placeholder="e.g. Dawande">
+    <!-- Passenger and payment -->
+    <section class="sticky-col" aria-label="Passenger and payment">
+        <div class="panel">
+            <div class="step-head" style="margin-bottom: 1.75rem;">
+                <div>
+                    <h3>2. Passenger and payment</h3>
+                    <p>Details must match the passenger's travel document.</p>
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; margin-bottom: 0.65rem;">
-                <div class="field-group">
-                    <label class="field-label">Email Address</label>
-                    <input type="email" id="paxEmail" class="field-input" required placeholder="tanmay@example.com">
-                </div>
-                <div class="field-group">
-                    <label class="field-label">Phone Number</label>
-                    <input type="tel" id="paxPhone" class="field-input" required placeholder="+91-9876543210">
-                </div>
-            </div>
+            <form id="bookingForm" onsubmit="submitBookingFlow(event)">
+                <input type="hidden" id="bookingFlightId" value="{{ flight.flight_id }}">
+                <input type="hidden" id="selectedSeatInput" value="">
 
-            <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 0.65rem; margin-bottom: 0.65rem;">
-                <div class="field-group">
-                    <label class="field-label">Passport / ID Number</label>
-                    <input type="text" id="paxPassport" class="field-input" required placeholder="e.g. Z1234567">
-                </div>
-                <div class="field-group">
-                    <label class="field-label">Gender</label>
-                    <select id="paxGender" class="field-select">
-                        <option value="MALE">Male</option>
-                        <option value="FEMALE">Female</option>
-                        <option value="OTHER">Other</option>
-                    </select>
-                </div>
-            </div>
+                <div class="form-grid">
+                    <label class="field">
+                        <span class="field-label">First name</span>
+                        <input type="text" id="paxFirstName" class="field-input" required placeholder="Tanmay" autocomplete="given-name">
+                    </label>
+                    <label class="field">
+                        <span class="field-label">Last name</span>
+                        <input type="text" id="paxLastName" class="field-input" required placeholder="Dawande" autocomplete="family-name">
+                    </label>
 
-            <div class="field-group" style="margin-bottom: 0.85rem;">
-                <label class="field-label">Date of Birth</label>
-                <input type="date" id="paxDob" class="field-input" value="2003-05-15">
-            </div>
+                    <label class="field">
+                        <span class="field-label">Email</span>
+                        <input type="email" id="paxEmail" class="field-input" required placeholder="tanmay@example.com" autocomplete="email">
+                    </label>
+                    <label class="field">
+                        <span class="field-label">Phone</span>
+                        <input type="tel" id="paxPhone" class="field-input" required placeholder="+91-9876543210" autocomplete="tel">
+                    </label>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; margin-bottom: 1.25rem;">
-                <div class="field-group">
-                    <label class="field-label">Travel Class</label>
-                    <select id="travelClassSelect" class="field-select" onchange="updatePriceBreakdown(this.value)">
-                        <option value="ECONOMY">Economy (1.0x)</option>
-                        <option value="BUSINESS">Business (2.0x)</option>
-                        <option value="FIRST">First Class (3.5x)</option>
-                    </select>
-                </div>
-                <div class="field-group">
-                    <label class="field-label">Payment Method</label>
-                    <select id="paymentMethodSelect" class="field-select">
-                        <option value="UPI">UPI (Google Pay / PhonePe)</option>
-                        <option value="CREDIT_CARD">Credit Card</option>
-                        <option value="DEBIT_CARD">Debit Card</option>
-                        <option value="NET_BANKING">Net Banking</option>
-                    </select>
-                </div>
-            </div>
+                    <label class="field">
+                        <span class="field-label">Passport or ID number</span>
+                        <input type="text" id="paxPassport" class="field-input" required placeholder="Z1234567">
+                    </label>
+                    <label class="field">
+                        <span class="field-label">Gender</span>
+                        <select id="paxGender" class="field-select">
+                            <option value="MALE">Male</option>
+                            <option value="FEMALE">Female</option>
+                            <option value="OTHER">Other</option>
+                        </select>
+                    </label>
 
-            <!-- Price Breakdown Box -->
-            <div style="background: #040404; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.85rem; margin-bottom: 1.25rem;">
-                <div style="display: flex; justify-content: space-between; font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.35rem;">
-                    <span>Base Ticket Fare</span>
-                    <span id="fareSubtotal" style="font-family: var(--font-code); color: #fff;">INR {{ "{:,.0f}".format(flight.base_fare) }}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.5rem;">
-                    <span>Taxes & Airport Surcharge</span>
-                    <span style="font-family: var(--font-code); color: #fff;">INR 350</span>
-                </div>
-                <div style="border-top: 1px solid var(--border); padding-top: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: 600; color: #fff;">Total Amount</span>
-                    <span id="fareTotal" style="font-size: 1.35rem; font-weight: 700; color: #10b981; font-family: var(--font-code);">
-                        INR {{ "{:,.0f}".format(flight.base_fare + 350) }}
-                    </span>
-                </div>
-            </div>
+                    <label class="field span-2">
+                        <span class="field-label">Date of birth</span>
+                        <input type="date" id="paxDob" class="field-input" value="2003-05-15">
+                    </label>
 
-            <button type="submit" id="btnConfirmBooking" class="btn btn-primary" style="width: 100%; height: 44px; font-size: 0.92rem;">
-                Confirm & Pay Now
-            </button>
-        </form>
-    </div>
+                    <label class="field">
+                        <span class="field-label">Travel class</span>
+                        <select id="travelClassSelect" class="field-select" onchange="updatePriceBreakdown(this.value)">
+                            <option value="ECONOMY">Economy (1.0x)</option>
+                            <option value="BUSINESS">Business (2.0x)</option>
+                            <option value="FIRST">First (3.5x)</option>
+                        </select>
+                    </label>
+                    <label class="field">
+                        <span class="field-label">Payment method</span>
+                        <select id="paymentMethodSelect" class="field-select">
+                            <option value="UPI">UPI (Google Pay, PhonePe)</option>
+                            <option value="CREDIT_CARD">Credit card</option>
+                            <option value="DEBIT_CARD">Debit card</option>
+                            <option value="NET_BANKING">Net banking</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="fare-lines">
+                    <div class="fare-line">
+                        <span>Base fare</span>
+                        <span class="val" id="fareSubtotal">INR {{ "{:,.0f}".format(flight.base_fare) }}</span>
+                    </div>
+                    <div class="fare-line">
+                        <span>Taxes and airport surcharge</span>
+                        <span class="val">INR 350</span>
+                    </div>
+                    <div class="fare-line fare-total">
+                        <span>Total</span>
+                        <span class="val" id="fareTotal">INR {{ "{:,.0f}".format(flight.base_fare + 350) }}</span>
+                    </div>
+                </div>
+
+                <button type="submit" id="btnConfirmBooking" class="btn btn-primary btn-lg btn-block">Confirm &amp; Pay Now</button>
+            </form>
+        </div>
+    </section>
 </div>
 {% endblock %}
 
@@ -305,7 +227,6 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         initSeatSelection("{{ flight.base_fare }}");
-        if (window.lucide) lucide.createIcons();
     });
 
     function scrollToRow(rowNum) {
