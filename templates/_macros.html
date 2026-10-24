@@ -1,0 +1,91 @@
+{#
+  Shared presentation helpers. Pure markup: every value comes from the
+  existing view context, nothing here changes what the routes return.
+#}
+
+{% set MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] %}
+
+{# "2026-10-28 07:00:00" -> "28 Oct" #}
+{% macro short_date(value) -%}
+{%- set s = value|string -%}
+{%- if s|length >= 10 -%}{{ s[8:10]|int }} {{ MONTHS[(s[5:7]|int) - 1] }}{%- endif -%}
+{%- endmacro %}
+
+{# "2026-10-28 07:00:00" -> "07:00" #}
+{% macro clock(value) -%}
+{%- set s = value|string -%}
+{{ s.split(' ')[1][:5] if ' ' in s else s }}
+{%- endmacro %}
+
+{% macro status_label(status) -%}
+{%- if status == 'ON_TIME' -%}<span class="status ok">On time</span>
+{%- elif status == 'BOARDING' -%}<span class="status warn">Boarding</span>
+{%- elif status == 'DELAYED' -%}<span class="status warn">Delayed</span>
+{%- elif status == 'CANCELLED' -%}<span class="status bad">Cancelled</span>
+{%- endif -%}
+{%- endmacro %}
+
+{# One departure: carrier, times and route, fare and action #}
+{% macro flight_row(f, summary=False) %}
+{% set dep = f.departure_time|string %}
+{% set arr = f.arrival_time|string %}
+<article class="flight-row{% if summary %} summary{% endif %}">
+    <div class="fl-carrier">
+        <span class="fl-airline">{{ f.airline_name }}</span>
+        <span class="fl-meta">{{ f.flight_number }}, {{ f.aircraft_model }}</span>
+        {{ status_label(f.status) }}
+    </div>
+
+    <div class="fl-route">
+        <div class="fl-end">
+            <span class="fl-time">{{ clock(f.departure_time) }}</span>
+            <span class="fl-place">
+                <span class="fl-code">{{ f.origin_code }}</span>
+                <span class="fl-city">{{ f.origin_city }}</span>
+            </span>
+            <span class="fl-date">{{ short_date(f.departure_time) }}</span>
+        </div>
+
+        <div class="fl-path">
+            <span>{{ f.duration_mins // 60 }}h {{ f.duration_mins % 60 }}m</span>
+            <span class="fl-line"></span>
+            <span>Non-stop</span>
+        </div>
+
+        <div class="fl-end arr">
+            <span class="fl-time">{{ clock(f.arrival_time) }}{% if ' ' in dep and ' ' in arr and arr[:10] != dep[:10] %}<sup>+1</sup>{% endif %}</span>
+            <span class="fl-place">
+                <span class="fl-code">{{ f.destination_code }}</span>
+                <span class="fl-city">{{ f.dest_city }}</span>
+            </span>
+            <span class="fl-date">{{ short_date(f.arrival_time) }}</span>
+        </div>
+    </div>
+
+    <div class="fl-fare">
+        <div class="fl-fare-text">
+            <span class="fl-price">₹{{ "{:,.0f}".format(f.base_fare) }}</span>
+            {% if summary %}
+            <span class="fl-seats">Base economy fare</span>
+            {% elif f.available_seats <= 0 %}
+            <span class="fl-seats low">Sold out</span>
+            {% else %}
+            <span class="fl-seats{% if f.available_seats <= 5 %} low{% endif %}">{{ f.available_seats }} seat{{ '' if f.available_seats == 1 else 's' }} left</span>
+            {% endif %}
+        </div>
+        {% if not summary %}
+        <a href="{{ url_for('booking_page', flight_id=f.flight_id) }}" class="btn btn-primary btn-sm">Select seat</a>
+        {% endif %}
+    </div>
+</article>
+{% endmacro %}
+
+{# Status word for tables: flights, bookings and payments share one vocabulary #}
+{% macro state(status) -%}
+{%- set s = status|string|upper -%}
+{%- if s in ('ON_TIME', 'CONFIRMED', 'SUCCESS') -%}<span class="status ok">{{ s|replace('_', ' ')|capitalize }}</span>
+{%- elif s in ('BOARDING', 'DELAYED', 'PENDING') -%}<span class="status warn">{{ s|replace('_', ' ')|capitalize }}</span>
+{%- elif s in ('CANCELLED', 'FAILED', 'REFUNDED') -%}<span class="status bad">{{ s|replace('_', ' ')|capitalize }}</span>
+{%- else -%}<span class="status">{{ s|replace('_', ' ')|capitalize }}</span>
+{%- endif -%}
+{%- endmacro %}

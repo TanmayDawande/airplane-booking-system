@@ -3,210 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f1a1f">
     <title>{% block title %}SkyReserve | Airline Reservation System{% endblock %}</title>
-    <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <!-- Clean Minimalist Header -->
+    <a href="#main" class="skip-link">Skip to content</a>
+
     <header class="site-header">
         <div class="header-inner">
-            <a href="{{ url_for('index') }}" class="brand-link">
-                <i data-lucide="plane" style="color: #ffffff; width: 18px; height: 18px;"></i>
-                <span>SkyReserve</span>
-            </a>
+            <a href="{{ url_for('index') }}" class="brand-link">SkyReserve</a>
 
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="{{ url_for('index') }}" class="{% if request.endpoint == 'index' %}active{% endif %}">
-                        <span>Search</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ url_for('flights_page') }}" class="{% if request.endpoint == 'flights_page' %}active{% endif %}">
-                        <span>Flights</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ url_for('my_bookings_page') }}" class="{% if request.endpoint == 'my_bookings_page' %}active{% endif %}">
-                        <span>My Bookings</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ url_for('admin_page') }}" class="{% if request.endpoint == 'admin_page' %}active{% endif %}">
-                        <span>Admin</span>
-                    </a>
-                </li>
-            </ul>
+            <nav aria-label="Primary">
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="{{ url_for('index') }}" class="{% if request.endpoint == 'index' %}active{% endif %}"{% if request.endpoint == 'index' %} aria-current="page"{% endif %}>Search</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('flights_page') }}" class="{% if request.endpoint in ('flights_page', 'booking_page') %}active{% endif %}"{% if request.endpoint in ('flights_page', 'booking_page') %} aria-current="page"{% endif %}>Flights</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('my_bookings_page') }}" class="{% if request.endpoint in ('my_bookings_page', 'ticket_page') %}active{% endif %}"{% if request.endpoint in ('my_bookings_page', 'ticket_page') %} aria-current="page"{% endif %}>My bookings</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('admin_page') }}" class="{% if request.endpoint == 'admin_page' %}active{% endif %}"{% if request.endpoint == 'admin_page' %} aria-current="page"{% endif %}>Admin</a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="header-right">
+                <button type="button" class="db-status-badge" onclick="openDbModal()" title="Database connection">
+                    <span class="status-dot"></span>
+                    <span>{{ db_info.engine }}</span>
+                </button>
+            </div>
         </div>
     </header>
 
-    <!-- Main Page Content -->
-    <main class="main-content">
+    <main class="main-content" id="main">
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer -->
     <footer class="site-footer">
         <div class="footer-inner">
-            <div>
-                &copy; 2026 SkyReserve. All rights reserved.
-            </div>
-            <div style="display: flex; gap: 0.85rem; align-items: center; font-size: 0.75rem;">
-                <a href="{{ url_for('reports_page') }}" style="color: var(--text-dim);">Queries & Reports</a>
-                <span>•</span>
-                <a href="{{ url_for('db_studio_page') }}" style="color: var(--text-dim);">SQL Studio</a>
-                <span>•</span>
-                <a href="{{ url_for('guide_page') }}" style="color: var(--text-dim);">Demo Script</a>
-                <span>•</span>
-                <a href="javascript:void(0)" onclick="openDbModal()" style="color: var(--text-dim);">DB: {{ db_info.engine }}</a>
-            </div>
+            <span class="footer-brand">SkyReserve</span>
+            <nav class="footer-links" aria-label="Project tools">
+                <a href="{{ url_for('reports_page') }}">Queries and reports</a>
+                <a href="{{ url_for('db_studio_page') }}">SQL studio</a>
+                <a href="{{ url_for('guide_page') }}">Demo script</a>
+            </nav>
         </div>
     </footer>
 
-    <!-- Database Connection Modal -->
-    <div id="dbConfigModal" class="modal-overlay">
+    <!-- Database connection -->
+    <div id="dbConfigModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="dbModalTitle">
         <div class="modal-content">
             <div class="modal-header">
                 <div>
-                    <h3>Database Settings</h3>
-                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">Choose database engine or enter MySQL credentials</p>
+                    <h3 id="dbModalTitle">Database connection</h3>
+                    <p>Use the bundled SQLite file or point the app at MySQL.</p>
                 </div>
-                <button onclick="closeModal('dbConfigModal')" style="background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer;">&times;</button>
+                <button type="button" class="icon-btn" aria-label="Close" onclick="closeModal('dbConfigModal')">&times;</button>
             </div>
 
             <form onsubmit="testAndApplyDbConfig(event)">
                 <div class="modal-body">
-                    <div style="background: #040404; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.85rem; margin-bottom: 1rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                    <div class="db-readout">
                         <div>
-                            <span style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Active Engine</span>
-                            <div id="dbEngineDisplay" style="font-weight: 700; color: #10b981; font-family: var(--font-code); font-size: 1rem;">{{ db_info.engine }}</div>
+                            <div class="label">Engine</div>
+                            <div class="value engine" id="dbEngineDisplay">{{ db_info.engine }}</div>
                         </div>
                         <div>
-                            <span style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Target / Host</span>
-                            <div id="dbHostDisplay" style="font-weight: 600; color: #fff; font-size: 0.9rem;">{{ db_info.host }}</div>
+                            <div class="label">Host</div>
+                            <div class="value" id="dbHostDisplay">{{ db_info.host }}</div>
+                        </div>
+                        <div>
+                            <div class="label">Tables</div>
+                            <div class="value" id="dbTablesDisplay">&nbsp;</div>
                         </div>
                     </div>
 
-                    <div style="margin-bottom: 0.85rem;">
-                        <label class="field-label">Database Type</label>
-                        <select id="cfgEngine" class="field-select">
-                            <option value="sqlite">SQLite (Pre-configured local database file)</option>
-                            <option value="mysql">MySQL 8.0 (Local MySQL Service / Workbench)</option>
-                        </select>
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 0.65rem; margin-bottom: 0.65rem;">
-                        <div>
-                            <label class="field-label">Host</label>
+                    <div class="form-grid">
+                        <label class="field span-2">
+                            <span class="field-label">Database type</span>
+                            <select id="cfgEngine" class="field-select">
+                                <option value="sqlite">SQLite (bundled local file)</option>
+                                <option value="mysql">MySQL 8.0 (local service or Workbench)</option>
+                            </select>
+                        </label>
+                        <label class="field">
+                            <span class="field-label">Host</span>
                             <input type="text" id="cfgHost" class="field-input" value="localhost">
-                        </div>
-                        <div>
-                            <label class="field-label">Port</label>
+                        </label>
+                        <label class="field">
+                            <span class="field-label">Port</span>
                             <input type="number" id="cfgPort" class="field-input" value="3306">
-                        </div>
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; margin-bottom: 0.65rem;">
-                        <div>
-                            <label class="field-label">Username</label>
+                        </label>
+                        <label class="field">
+                            <span class="field-label">Username</span>
                             <input type="text" id="cfgUser" class="field-input" value="root">
-                        </div>
-                        <div>
-                            <label class="field-label">Password</label>
+                        </label>
+                        <label class="field">
+                            <span class="field-label">Password</span>
                             <input type="password" id="cfgPassword" class="field-input" placeholder="MySQL password">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="field-label">Database Name</label>
-                        <input type="text" id="cfgDatabase" class="field-input" value="airline_db">
+                        </label>
+                        <label class="field span-2">
+                            <span class="field-label">Database name</span>
+                            <input type="text" id="cfgDatabase" class="field-input" value="airline_db">
+                        </label>
                     </div>
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" onclick="closeModal('dbConfigModal')" class="btn btn-secondary btn-sm">Cancel</button>
-                    <button type="submit" id="btnSaveDb" class="btn btn-primary btn-sm">Save & Connect</button>
+                    <button type="button" onclick="closeModal('dbConfigModal')" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" id="btnSaveDb" class="btn btn-primary">Save and connect</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Quick Passenger Modal (Assessment 8 Proof if needed) -->
-    <div id="assessment8Modal" class="modal-overlay">
+    <!-- New passenger -->
+    <div id="assessment8Modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="addPaxTitle">
         <div class="modal-content">
             <div class="modal-header">
                 <div>
-                    <h3>New Passenger Registration</h3>
-                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">Add a passenger record directly to the database</p>
+                    <h3 id="addPaxTitle">Add passenger <span class="op">INSERT</span></h3>
+                    <p>Saves a new passenger record and reads it straight back.</p>
                 </div>
-                <button onclick="closeModal('assessment8Modal')" style="background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer;">&times;</button>
+                <button type="button" class="icon-btn" aria-label="Close" onclick="closeModal('assessment8Modal')">&times;</button>
             </div>
 
             <form onsubmit="submitAssessment8Passenger(event)">
                 <div class="modal-body">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; margin-bottom: 0.65rem;">
-                        <div>
-                            <label class="field-label">First Name</label>
-                            <input type="text" id="a8FirstName" class="field-input" required placeholder="e.g. Vikram">
-                        </div>
-                        <div>
-                            <label class="field-label">Last Name</label>
-                            <input type="text" id="a8LastName" class="field-input" required placeholder="e.g. Malhotra">
-                        </div>
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; margin-bottom: 0.65rem;">
-                        <div>
-                            <label class="field-label">Email</label>
+                    <div class="form-grid">
+                        <label class="field">
+                            <span class="field-label">First name</span>
+                            <input type="text" id="a8FirstName" class="field-input" required placeholder="Vikram">
+                        </label>
+                        <label class="field">
+                            <span class="field-label">Last name</span>
+                            <input type="text" id="a8LastName" class="field-input" required placeholder="Malhotra">
+                        </label>
+                        <label class="field">
+                            <span class="field-label">Email</span>
                             <input type="email" id="a8Email" class="field-input" required placeholder="vikram@example.com">
-                        </div>
-                        <div>
-                            <label class="field-label">Phone</label>
+                        </label>
+                        <label class="field">
+                            <span class="field-label">Phone</span>
                             <input type="text" id="a8Phone" class="field-input" required placeholder="+91-9811223344">
-                        </div>
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.65rem; margin-bottom: 0.65rem;">
-                        <div>
-                            <label class="field-label">Passport / ID</label>
+                        </label>
+                        <label class="field">
+                            <span class="field-label">Passport or ID</span>
                             <input type="text" id="a8Passport" class="field-input" required placeholder="X7766554">
-                        </div>
-                        <div>
-                            <label class="field-label">Date of Birth</label>
+                        </label>
+                        <label class="field">
+                            <span class="field-label">Date of birth</span>
                             <input type="date" id="a8Dob" class="field-input" value="1999-07-12">
-                        </div>
-                        <div>
-                            <label class="field-label">Gender</label>
+                        </label>
+                        <label class="field span-2">
+                            <span class="field-label">Gender</span>
                             <select id="a8Gender" class="field-select">
                                 <option value="MALE">Male</option>
                                 <option value="FEMALE">Female</option>
                                 <option value="OTHER">Other</option>
                             </select>
-                        </div>
+                        </label>
                     </div>
 
                     <div id="a8VerificationResult"></div>
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" onclick="closeModal('assessment8Modal')" class="btn btn-secondary btn-sm">Close</button>
-                    <button type="submit" class="btn btn-primary btn-sm">Save to Database</button>
+                    <button type="button" onclick="closeModal('assessment8Modal')" class="btn btn-secondary">Close</button>
+                    <button type="submit" class="btn btn-primary">Add passenger</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Scripts -->
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            if (window.lucide) lucide.createIcons();
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.active').forEach((m) => m.classList.remove('active'));
+            }
         });
     </script>
     {% block extra_scripts %}{% endblock %}
