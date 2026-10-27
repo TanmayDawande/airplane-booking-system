@@ -112,7 +112,7 @@
     <div class="role">
         <div class="role-name">Teammate 1<small>Login, search, validation and booking.</small></div>
         <ol>
-            <li><strong>Login and authentication (0:00–0:35).</strong> Open <a href="{{ url_for('login_page') }}">Sign in</a>. First enter a wrong password and show the error. Then sign in as <code>tanmay</code> / <code>password123</code>. Show the username in the header.</li>
+            <li><strong>Login and authentication (0:00–0:35).</strong> If the header shows a username, click <strong>Sign out</strong> first. Open <a href="{{ url_for('login_page') }}">Sign in</a>. Enter a wrong password to show the error, then sign in as <code>tanmay</code> / <code>password123</code>. Show the username in the header.</li>
             <li><strong>Search (0:35–1:05).</strong> From the home page, search BOM → DEL on the date shown. Show the matching flights, cabin fare and available seats.</li>
             <li><strong>Seat selection (1:05–1:45).</strong> Open a flight, point out occupied seats, choose an open seat, and show the fare breakdown update.</li>
             <li><strong>Invalid input (1:45–2:15).</strong> Try a malformed email or phone number and show the server-side error. Then fill valid passenger details. Also show that selecting an already occupied seat is blocked.</li>
