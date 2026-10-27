@@ -15,7 +15,7 @@ function showToast(message, type = 'success') {
 
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
-    
+
     let icon = `
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
@@ -64,53 +64,41 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// Database Connection Modal & Switcher
+// Database status (read-only). The app is MySQL-only.
 async function openDbModal() {
     openModal('dbConfigModal');
     try {
         const res = await fetch('/api/db/status');
         const data = await res.json();
-        document.getElementById('dbEngineDisplay').innerText = data.engine;
-        document.getElementById('dbHostDisplay').innerText = data.host;
-        document.getElementById('dbTablesDisplay').innerText = `${data.tables_count} Tables Active`;
-        document.getElementById('cfgEngine').value = data.engine.toLowerCase();
+        const engine = document.getElementById('dbEngineDisplay');
+        const host = document.getElementById('dbHostDisplay');
+        const database = document.getElementById('dbDatabaseDisplay');
+        const tables = document.getElementById('dbTablesDisplay');
+        if (engine) engine.innerText = data.engine.toUpperCase();
+        if (host) host.innerText = `${data.host}:${data.port}`;
+        if (database) database.innerText = data.database;
+        if (tables) tables.innerText = `${data.tables_count} tables`;
     } catch (err) {
         console.error('Failed to fetch DB status', err);
     }
 }
 
-async function testAndApplyDbConfig(e) {
-    if (e) e.preventDefault();
-    const engine = document.getElementById('cfgEngine').value;
-    const host = document.getElementById('cfgHost').value;
-    const port = document.getElementById('cfgPort').value;
-    const user = document.getElementById('cfgUser').value;
-    const password = document.getElementById('cfgPassword').value;
-    const database = document.getElementById('cfgDatabase').value;
-
-    const btn = document.getElementById('btnSaveDb');
-    btn.disabled = true;
-    btn.innerText = 'Connecting & Verifying...';
-
-    try {
-        const res = await fetch('/api/db/configure', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ engine, host, port, user, password, database })
-        });
-        const result = await res.json();
-        if (result.success) {
-            showToast(result.message, 'success');
-            setTimeout(() => window.location.reload(), 1000);
-        } else {
-            showToast(result.error, 'error');
-        }
-    } catch (err) {
-        showToast('Connection failed: ' + err.message, 'error');
-    } finally {
-        btn.disabled = false;
-        btn.innerText = 'Save & Connect';
-    }
+// Live IST clock, so the timezone fix is visible during the demo.
+function updateIstClock() {
+    const nodes = document.querySelectorAll('[data-ist-clock]');
+    if (!nodes.length) return;
+    const formatted = new Intl.DateTimeFormat('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        day: '2-digit',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+    }).format(new Date());
+    nodes.forEach((node) => {
+        node.innerText = `${formatted} IST`;
+    });
 }
 
 // Interactive Seat Selection Logic
@@ -249,24 +237,26 @@ async function submitAssessment8Passenger(e) {
             showToast(result.message, 'success');
             const p = result.data;
             resBox.innerHTML = `
-                <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 1.25rem; border-radius: 8px; margin-top: 1rem;">
-                    <div style="color: #34d399; font-weight: 700; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                        SUCCESSFULLY STORED & RETRIEVED FROM DATABASE (Assessment 8 Proof)
+                <div style="background: rgba(140, 199, 161, 0.12); border: 1px solid rgba(140, 199, 161, 0.35); padding: 1.25rem; border-radius: 10px; margin-top: 1rem;">
+                    <div style="color: var(--success); font-weight: 700; margin-bottom: 0.6rem;">
+                        Stored in MySQL and read back successfully (Assessment 8 proof)
                     </div>
                     <table style="width: 100%; font-size: 0.85rem; border-collapse: collapse;">
-                        <tr><td style="color: #94a3b8; padding: 4px 0;">Passenger ID (PK):</td><td style="font-family: monospace; font-weight: 700; color: #fff;">${p.passenger_id}</td></tr>
-                        <tr><td style="color: #94a3b8; padding: 4px 0;">Full Name:</td><td style="font-weight: 600; color: #fff;">${p.first_name} ${p.last_name}</td></tr>
-                        <tr><td style="color: #94a3b8; padding: 4px 0;">Email:</td><td style="color: #60a5fa;">${p.email}</td></tr>
-                        <tr><td style="color: #94a3b8; padding: 4px 0;">Phone:</td><td>${p.phone}</td></tr>
-                        <tr><td style="color: #94a3b8; padding: 4px 0;">Passport No:</td><td style="font-family: monospace;">${p.passport_number}</td></tr>
-                        <tr><td style="color: #94a3b8; padding: 4px 0;">Created At:</td><td style="font-family: monospace; color: #a78bfa;">${p.created_at || 'Just now'}</td></tr>
+                        <tr><td style="color: var(--text-muted); padding: 4px 0;">Passenger ID (PK):</td><td style="font-family: var(--font-code); font-weight: 700; color: var(--text);">${p.passenger_id}</td></tr>
+                        <tr><td style="color: var(--text-muted); padding: 4px 0;">Full name:</td><td style="font-weight: 600; color: var(--text);">${p.first_name} ${p.last_name}</td></tr>
+                        <tr><td style="color: var(--text-muted); padding: 4px 0;">Email:</td><td style="color: var(--info);">${p.email}</td></tr>
+                        <tr><td style="color: var(--text-muted); padding: 4px 0;">Phone:</td><td>${p.phone}</td></tr>
+                        <tr><td style="color: var(--text-muted); padding: 4px 0;">Passport or ID:</td><td style="font-family: var(--font-code);">${p.passport_number}</td></tr>
+                        <tr><td style="color: var(--text-muted); padding: 4px 0;">Recorded at (IST):</td><td style="font-family: var(--font-code); color: var(--accent);">${p.created_at || 'Just now'}</td></tr>
                     </table>
+                    <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.7rem;">
+                        Verify in MySQL Workbench: <code>SELECT * FROM passengers WHERE passenger_id = ${p.passenger_id};</code>
+                    </p>
                 </div>
             `;
         } else {
             showToast(result.error, 'error');
-            resBox.innerHTML = `<p style="color: #f87171;">Error: ${result.error}</p>`;
+            resBox.innerHTML = `<p style="color: var(--danger);">${result.error}</p>`;
         }
     } catch (err) {
         showToast('Error: ' + err.message, 'error');

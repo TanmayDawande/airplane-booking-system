@@ -141,6 +141,17 @@
                 </div>
             </div>
 
+            {% if current_user %}
+            <p class="field-hint" style="margin-bottom: 1.25rem;">
+                Signed in as <strong>{{ current_user.username }}</strong>. This booking will be linked to your account.
+            </p>
+            {% else %}
+            <p class="field-hint" style="margin-bottom: 1.25rem;">
+                Booking as a guest. <a class="link" href="{{ url_for('login_page', next=request.path) }}">Sign in</a>
+                to keep this booking under your account.
+            </p>
+            {% endif %}
+
             <form id="bookingForm" onsubmit="submitBookingFlow(event)">
                 <input type="hidden" id="bookingFlightId" value="{{ flight.flight_id }}">
                 <input type="hidden" id="selectedSeatInput" value="">
@@ -148,43 +159,43 @@
                 <div class="form-grid">
                     <label class="field">
                         <span class="field-label">First name</span>
-                        <input type="text" id="paxFirstName" class="field-input" required placeholder="Tanmay" autocomplete="given-name">
+                        <input type="text" id="paxFirstName" class="field-input" required placeholder="Tanmay" autocomplete="given-name" value="{{ prefill.first_name if prefill else '' }}">
                     </label>
                     <label class="field">
                         <span class="field-label">Last name</span>
-                        <input type="text" id="paxLastName" class="field-input" required placeholder="Dawande" autocomplete="family-name">
+                        <input type="text" id="paxLastName" class="field-input" required placeholder="Dawande" autocomplete="family-name" value="{{ prefill.last_name if prefill else '' }}">
                     </label>
 
                     <label class="field">
                         <span class="field-label">Email</span>
-                        <input type="email" id="paxEmail" class="field-input" required placeholder="tanmay@example.com" autocomplete="email">
+                        <input type="email" id="paxEmail" class="field-input" required placeholder="tanmay@example.com" autocomplete="email" value="{{ prefill.email if prefill else '' }}">
                     </label>
                     <label class="field">
                         <span class="field-label">Phone</span>
-                        <input type="tel" id="paxPhone" class="field-input" required placeholder="+91-9876543210" autocomplete="tel">
+                        <input type="tel" id="paxPhone" class="field-input" required placeholder="+91-9876543210" autocomplete="tel" value="{{ prefill.phone if prefill else '' }}">
                     </label>
 
                     <label class="field">
                         <span class="field-label">Passport or ID number</span>
-                        <input type="text" id="paxPassport" class="field-input" required placeholder="Z1234567">
+                        <input type="text" id="paxPassport" class="field-input" required placeholder="Z1234567" value="{{ prefill.passport_number if prefill else '' }}">
                     </label>
                     <label class="field">
                         <span class="field-label">Gender</span>
                         <select id="paxGender" class="field-select">
-                            <option value="MALE">Male</option>
-                            <option value="FEMALE">Female</option>
-                            <option value="OTHER">Other</option>
+                            <option value="MALE" {% if prefill and prefill.gender == 'MALE' %}selected{% endif %}>Male</option>
+                            <option value="FEMALE" {% if prefill and prefill.gender == 'FEMALE' %}selected{% endif %}>Female</option>
+                            <option value="OTHER" {% if prefill and prefill.gender == 'OTHER' %}selected{% endif %}>Other</option>
                         </select>
                     </label>
 
                     <label class="field span-2">
                         <span class="field-label">Date of birth</span>
-                        <input type="date" id="paxDob" class="field-input" value="2003-05-15">
+                        <input type="date" id="paxDob" class="field-input" max="{{ today }}" value="{{ prefill.date_of_birth if prefill else '2003-05-15' }}">
                     </label>
 
                     <label class="field">
                         <span class="field-label">Travel class</span>
-                        <select id="travelClassSelect" class="field-select" onchange="updatePriceBreakdown(this.value)">
+                        <select id="travelClassSelect" class="field-select" onchange="updatePriceBreakdown(this.value)" disabled title="Set automatically by the seat you choose">
                             <option value="ECONOMY">Economy (1.0x)</option>
                             <option value="BUSINESS">Business (2.0x)</option>
                             <option value="FIRST">First (3.5x)</option>
@@ -200,6 +211,7 @@
                         </select>
                     </label>
                 </div>
+                <p class="field-hint" style="margin-top: 0.75rem;">The cabin class is set by the seat you choose in the cabin map.</p>
 
                 <div class="fare-lines">
                     <div class="fare-line">

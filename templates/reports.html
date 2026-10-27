@@ -5,8 +5,13 @@
 
 {% block content %}
 <section class="page-head">
-    <h1 class="title-md">Queries and reports</h1>
-    <p class="subtitle">Multi-table joins, grouped aggregates and a nested subquery, run live against the bookings data.</p>
+    <div>
+        <h1 class="title-md">Queries and reports</h1>
+        <p class="subtitle">Multi-table joins, grouped aggregates and a nested subquery, run live against the MySQL booking data.</p>
+    </div>
+    <div class="head-actions">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="window.print()">Print report</button>
+    </div>
 </section>
 
 <section class="report">
@@ -18,7 +23,7 @@
 
     <details class="sql">
         <summary>View SQL</summary>
-        <pre>SELECT 
+        <pre>SELECT
     al.airline_code,
     al.airline_name,
     COUNT(DISTINCT f.flight_id) AS scheduled_flights,
@@ -62,6 +67,55 @@ ORDER BY total_revenue DESC;</pre>
 
 <section class="report">
     <header class="report-head">
+        <h2>Airline revenue above ₹5,000</h2>
+        <p>The same grouped revenue query, filtered after grouping with HAVING.</p>
+        <span class="tag">GROUP BY + HAVING</span>
+    </header>
+
+    <details class="sql">
+        <summary>View SQL</summary>
+        <pre>SELECT
+    al.airline_name,
+    COUNT(b.booking_id) AS total_bookings,
+    SUM(b.total_amount) AS gross_revenue,
+    ROUND(AVG(b.total_amount), 2) AS average_fare
+FROM airlines al
+JOIN flights f ON al.airline_id = f.airline_id
+JOIN bookings b ON f.flight_id = b.flight_id
+WHERE b.status = 'CONFIRMED'
+GROUP BY al.airline_id, al.airline_name
+HAVING gross_revenue > 5000
+ORDER BY gross_revenue DESC;</pre>
+    </details>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Airline</th>
+                    <th class="num">Confirmed bookings</th>
+                    <th class="num">Gross revenue</th>
+                    <th class="num">Average fare</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in revenue_having %}
+                <tr>
+                    <td class="strong">{{ r.airline_name }}</td>
+                    <td class="num">{{ r.total_bookings }}</td>
+                    <td class="num strong">₹{{ "{:,.2f}".format(r.gross_revenue) }}</td>
+                    <td class="num">₹{{ "{:,.2f}".format(r.average_fare) }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="sub">No airline has crossed the revenue threshold yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="report">
+    <header class="report-head">
         <h2>Seat occupancy by flight</h2>
         <p>Booked and open seats against aircraft capacity, with the share of the cabin filled.</p>
         <span class="tag">Five-table JOIN, calculated column</span>
@@ -69,7 +123,7 @@ ORDER BY total_revenue DESC;</pre>
 
     <details class="sql">
         <summary>View SQL</summary>
-        <pre>SELECT 
+        <pre>SELECT
     f.flight_number, al.airline_name, orig.city AS origin_city, dest.city AS dest_city,
     ac.model AS aircraft_model, ac.total_seats,
     COUNT(CASE WHEN b.status = 'CONFIRMED' THEN b.booking_id END) AS booked_seats,
@@ -127,16 +181,16 @@ ORDER BY booked_seats DESC;</pre>
 
     <details class="sql">
         <summary>View SQL</summary>
-        <pre>SELECT 
+        <pre>SELECT
     p.passenger_id,
     CONCAT(p.first_name, ' ', p.last_name) AS full_name,
     p.email, p.phone, b.pnr, b.total_amount, b.travel_class
 FROM passengers p
 JOIN bookings b ON p.passenger_id = b.passenger_id
-WHERE b.status = 'CONFIRMED' 
+WHERE b.status = 'CONFIRMED'
   AND b.total_amount > (
-      SELECT AVG(total_amount) 
-      FROM bookings 
+      SELECT AVG(total_amount)
+      FROM bookings
       WHERE status = 'CONFIRMED'
   )
 ORDER BY b.total_amount DESC;</pre>
@@ -166,6 +220,74 @@ ORDER BY b.total_amount DESC;</pre>
                 </tr>
                 {% else %}
                 <tr><td colspan="6" class="sub">No booking is above the average fare yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+<section class="report">
+    <header class="report-head">
+        <h2>Full itinerary (five-table join)</h2>
+        <p>Bookings joined to passengers, flights, airlines and both airport records.</p>
+        <span class="tag">Five-table INNER JOIN</span>
+    </header>
+
+    <details class="sql">
+        <summary>View SQL</summary>
+        <pre>SELECT
+    b.pnr,
+    CONCAT(p.first_name, ' ', p.last_name) AS passenger_name,
+    al.airline_name,
+    f.flight_number,
+    orig.city AS origin_city,
+    dest.city AS dest_city,
+    f.departure_time,
+    b.seat_number,
+    b.travel_class,
+    b.total_amount,
+    b.status AS booking_status,
+    b.booking_date
+FROM bookings b
+JOIN passengers p ON b.passenger_id = p.passenger_id
+JOIN flights f ON b.flight_id = f.flight_id
+JOIN airlines al ON f.airline_id = al.airline_id
+JOIN airports orig ON f.origin_code = orig.airport_code
+JOIN airports dest ON f.destination_code = dest.airport_code
+ORDER BY b.booking_id DESC
+LIMIT 25;</pre>
+    </details>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>PNR</th>
+                    <th>Passenger</th>
+                    <th>Airline</th>
+                    <th>Flight</th>
+                    <th>Route</th>
+                    <th>Departure (IST)</th>
+                    <th>Seat</th>
+                    <th>Class</th>
+                    <th class="num">Fare</th>
+                    <th>Booked (IST)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in itinerary %}
+                <tr>
+                    <td class="code accent">{{ b.pnr }}</td>
+                    <td class="strong">{{ b.passenger_name }}</td>
+                    <td>{{ b.airline_name }}</td>
+                    <td class="code">{{ b.flight_number }}</td>
+                    <td class="sub">{{ b.origin_city }} to {{ b.dest_city }}</td>
+                    <td class="sub nowrap">{{ b.departure_time|ist }}</td>
+                    <td class="strong">{{ b.seat_number }}</td>
+                    <td class="sub">{{ b.travel_class|capitalize }}</td>
+                    <td class="num strong">₹{{ "{:,.2f}".format(b.total_amount) }}</td>
+                    <td class="sub nowrap">{{ b.booking_date|ist }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="10" class="sub">No bookings yet.</td></tr>
                 {% endfor %}
             </tbody>
         </table>

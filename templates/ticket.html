@@ -80,8 +80,8 @@
                     </div>
                 </div>
                 <div class="pass-field">
-                    <div class="label">Departs</div>
-                    <div class="value">{{ short_date(booking.departure_time) }}, {{ clock(booking.departure_time) }}</div>
+                    <div class="label">Departs (IST)</div>
+                    <div class="value">{{ short_date(booking.departure_time) }}, {{ clock(booking.departure_time) }} IST</div>
                 </div>
                 <div class="pass-field">
                     <div class="label">Terminal and gate</div>
@@ -148,6 +148,8 @@
             <div class="fact"><dt>Payment method</dt><dd>{{ booking.payment_method or 'UPI' }}</dd></div>
             <div class="fact"><dt>Total amount</dt><dd>INR {{ "{:,.2f}".format(booking.total_amount) }}</dd></div>
             <div class="fact"><dt>Payment status</dt><dd>{{ booking.payment_status or 'SUCCESS' }}</dd></div>
+            <div class="fact"><dt>Booked at (IST)</dt><dd>{{ booking.booking_date|ist }}</dd></div>
+            <div class="fact"><dt>Payment time (IST)</dt><dd>{{ booking.payment_time|ist }}</dd></div>
         </dl>
     </section>
     {% endif %}

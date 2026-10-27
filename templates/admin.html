@@ -1,529 +1,1100 @@
 {% extends "base.html" %}
+
 {% from "_macros.html" import state %}
+
+
 
 {% block title %}Admin | SkyReserve{% endblock %}
 
+
+
 {% block content %}
+
 <section class="page-head split">
+
     <div>
+
         <h1 class="title-md">Admin</h1>
+
         <p class="subtitle">Flights, passengers, bookings and the trigger audit trail.</p>
+
     </div>
+
     <div class="head-actions">
+
         <button type="button" onclick="openModal('addFlightModal')" class="btn btn-primary">Schedule flight <span class="op">INSERT</span></button>
+
         <button type="button" onclick="openModal('assessment8Modal')" class="btn btn-secondary">Add passenger <span class="op">INSERT</span></button>
+
     </div>
+
 </section>
 
+
+
+<p class="field-hint" style="margin-bottom: 1.5rem;">
+
+    Writing to <strong>MySQL · {{ db_info.database }}</strong> on
+
+    <strong>{{ db_info.host }}:{{ db_info.port }}</strong>. Verify any row in
+
+    MySQL Workbench with <code>SELECT * FROM flights;</code> or
+
+    <code>SELECT * FROM passengers;</code>.
+
+</p>
+
+
+
 <div class="tab-bar" role="tablist">
+
     <button type="button" class="tab-btn active" role="tab" onclick="switchAdminTab('flightsTab', this)">Flights<span class="count">{{ flights|length }}</span></button>
+
     <button type="button" class="tab-btn" role="tab" onclick="switchAdminTab('passengersTab', this)">Passengers<span class="count">{{ passengers|length }}</span></button>
+
     <button type="button" class="tab-btn" role="tab" onclick="switchAdminTab('bookingsTab', this)">Bookings<span class="count">{{ bookings|length }}</span></button>
+
     <button type="button" class="tab-btn" role="tab" onclick="switchAdminTab('auditTab', this)">Audit log<span class="count">{{ audit_logs|length }}</span></button>
+
 </div>
+
+
 
 <!-- Flights -->
+
 <div id="flightsTab" class="admin-tab-pane">
+
     <div class="table-responsive">
+
         <table class="data-table">
+
             <thead>
+
                 <tr>
+
                     <th>ID</th>
+
                     <th>Flight</th>
+
                     <th>Airline</th>
+
                     <th>Aircraft</th>
+
                     <th>Route</th>
+
                     <th>Departure</th>
+
                     <th class="num">Base fare</th>
+
                     <th>Status</th>
+
                     <th><span class="sr-only">Actions</span></th>
+
                 </tr>
+
             </thead>
+
             <tbody>
+
                 {% for f in flights %}
+
                 <tr id="flight-row-{{ f.flight_id }}">
+
                     <td class="id">{{ f.flight_id }}</td>
+
                     <td class="code strong">{{ f.flight_number }}</td>
+
                     <td class="strong">{{ f.airline_name }}</td>
+
                     <td class="sub">{{ f.aircraft_model }}</td>
+
                     <td class="nowrap">{{ f.origin_code }} <span class="dim">to</span> {{ f.destination_code }}</td>
-                    <td class="sub nowrap">{{ f.departure_time }}</td>
+
+                    <td class="sub nowrap">{{ f.departure_time|ist }}</td>
+
                     <td class="num">₹{{ "{:,.0f}".format(f.base_fare) }}</td>
+
                     <td>{{ state(f.status) }}</td>
+
                     <td class="num">
+
                         <div class="row-actions">
+
                             <button type="button" onclick="openEditFlightModal({{ f.flight_id }}, '{{ f.flight_number }}', {{ f.base_fare }}, '{{ f.status }}')" class="btn btn-secondary btn-sm" title="Edit flight (UPDATE)">Edit</button>
+
                             <button type="button" onclick="deleteFlight({{ f.flight_id }}, '{{ f.flight_number }}')" class="btn btn-danger btn-sm" title="Delete flight (DELETE)">Delete</button>
+
                         </div>
+
                     </td>
+
                 </tr>
+
                 {% endfor %}
+
             </tbody>
+
         </table>
+
     </div>
+
 </div>
+
+
 
 <!-- Passengers -->
+
 <div id="passengersTab" class="admin-tab-pane" style="display: none;">
+
+    <form class="pnr-search" action="{{ url_for('admin_page') }}" method="GET" style="margin-bottom: 1.25rem;">
+
+        <label class="field">
+
+            <span class="field-label">Find a passenger</span>
+
+            <input type="text" name="q" class="field-input" value="{{ passenger_query }}"
+
+                   placeholder="Name, email, phone or passport" autocomplete="off">
+
+        </label>
+
+        <button type="submit" class="btn btn-primary">Search</button>
+
+        {% if passenger_query %}<a href="{{ url_for('admin_page') }}" class="btn btn-secondary">Clear</a>{% endif %}
+
+    </form>
+
+
+
     <div class="table-responsive">
+
         <table class="data-table">
+
             <thead>
+
                 <tr>
+
                     <th>ID</th>
+
                     <th>Name</th>
+
                     <th>Email</th>
+
                     <th>Phone</th>
+
                     <th>Passport</th>
+
                     <th>Date of birth</th>
+
+                    <th>Created (IST)</th>
+
                     <th><span class="sr-only">Actions</span></th>
+
                 </tr>
+
             </thead>
+
             <tbody>
+
                 {% for p in passengers %}
+
                 <tr id="passenger-row-{{ p.passenger_id }}">
+
                     <td class="id">{{ p.passenger_id }}</td>
+
                     <td class="strong">{{ p.first_name }} {{ p.last_name }}</td>
+
                     <td class="sub">{{ p.email }}</td>
+
                     <td class="nowrap">{{ p.phone }}</td>
+
                     <td class="code">{{ p.passport_number }}</td>
+
                     <td class="sub nowrap">{{ p.date_of_birth }}</td>
+
+                    <td class="sub nowrap">{{ p.created_at|ist }}</td>
+
                     <td class="num">
+
                         <div class="row-actions">
+
                             <button type="button" onclick="openEditPassengerModal({{ p.passenger_id }}, '{{ p.first_name }}', '{{ p.last_name }}', '{{ p.email }}', '{{ p.phone }}', '{{ p.passport_number }}')" class="btn btn-secondary btn-sm" title="Edit passenger (UPDATE)">Edit</button>
+
                             <button type="button" onclick="deletePassenger({{ p.passenger_id }}, '{{ p.first_name }} {{ p.last_name }}')" class="btn btn-danger btn-sm" title="Delete passenger (DELETE)">Delete</button>
+
                         </div>
+
                     </td>
+
                 </tr>
+
                 {% endfor %}
+
             </tbody>
+
         </table>
+
     </div>
+
 </div>
+
+
 
 <!-- Bookings -->
+
 <div id="bookingsTab" class="admin-tab-pane" style="display: none;">
+
     <div class="table-responsive">
+
         <table class="data-table">
+
             <thead>
+
                 <tr>
+
                     <th>ID</th>
+
                     <th>PNR</th>
+
                     <th>Passenger</th>
+
                     <th>Flight</th>
+
                     <th>Seat</th>
+
                     <th>Class</th>
+
                     <th class="num">Amount</th>
+
                     <th>Status</th>
+
                 </tr>
+
             </thead>
+
             <tbody>
+
                 {% for b in bookings %}
+
                 <tr>
+
                     <td class="id">{{ b.booking_id }}</td>
+
                     <td class="code accent">{{ b.pnr }}</td>
+
                     <td class="strong">{{ b.first_name }} {{ b.last_name }}</td>
+
                     <td class="code">{{ b.flight_number }}</td>
+
                     <td class="strong">{{ b.seat_number }}</td>
+
                     <td class="sub">{{ b.travel_class|capitalize }}</td>
+
                     <td class="num">₹{{ "{:,.2f}".format(b.total_amount) }}</td>
+
                     <td>{{ state(b.booking_status) }}</td>
+
                 </tr>
+
                 {% endfor %}
+
             </tbody>
+
         </table>
+
     </div>
+
 </div>
+
+
 
 <!-- Audit log -->
+
 <div id="auditTab" class="admin-tab-pane" style="display: none;">
+
     <div class="table-responsive">
+
         <table class="data-table">
+
             <thead>
+
                 <tr>
+
                     <th>ID</th>
+
                     <th>Action</th>
+
                     <th>Table</th>
+
                     <th>Record</th>
+
                     <th>Details</th>
-                    <th>Recorded</th>
+
+                    <th>Recorded (IST)</th>
+
                 </tr>
+
             </thead>
+
             <tbody>
+
                 {% for l in audit_logs %}
+
                 <tr>
+
                     <td class="id">{{ l.log_id }}</td>
+
                     <td class="code">{{ l.action_type }}</td>
+
                     <td class="sub">{{ l.table_name }}</td>
+
                     <td class="sub">{{ l.record_id }}</td>
+
                     <td class="sub">{{ l.details }}</td>
-                    <td class="sub nowrap">{{ l.timestamp }}</td>
+
+                    <td class="sub nowrap">{{ l.timestamp|ist }}</td>
+
                 </tr>
+
                 {% endfor %}
+
             </tbody>
+
         </table>
+
     </div>
+
 </div>
+
+
 
 <!-- Schedule flight -->
+
 <div id="addFlightModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="addFlightTitle">
+
     <div class="modal-content wide">
+
         <div class="modal-header">
+
             <div>
+
                 <h3 id="addFlightTitle">Schedule flight <span class="op">INSERT</span></h3>
+
                 <p>Adds a new row to the flights table.</p>
+
             </div>
+
             <button type="button" class="icon-btn" aria-label="Close" onclick="closeModal('addFlightModal')">&times;</button>
+
         </div>
+
+
 
         <form onsubmit="submitAddFlight(event)">
+
             <div class="modal-body">
+
                 <div class="form-grid">
+
                     <label class="field">
+
                         <span class="field-label">Flight number</span>
+
                         <input type="text" id="addFlightNo" class="field-input" required placeholder="AI-999" style="text-transform: uppercase;">
+
                     </label>
+
                     <label class="field">
+
                         <span class="field-label">Airline</span>
+
                         <select id="addFlightAirline" class="field-select" required>
+
                             {% for al in airlines %}
+
                             <option value="{{ al.airline_id }}">{{ al.airline_name }} ({{ al.airline_code }})</option>
+
                             {% endfor %}
+
                         </select>
+
                     </label>
+
                     <label class="field span-2">
+
                         <span class="field-label">Aircraft</span>
+
                         <select id="addFlightAircraft" class="field-select" required>
+
                             {% for ac in aircrafts %}
+
                             <option value="{{ ac.aircraft_id }}">{{ ac.model }} ({{ ac.total_seats }} seats)</option>
+
                             {% endfor %}
+
                         </select>
+
                     </label>
+
                 </div>
 
+
+
                 <div class="form-grid">
+
                     <label class="field">
+
                         <span class="field-label">From</span>
+
                         <select id="addFlightOrigin" class="field-select" required>
+
                             {% for a in airports %}
+
                             <option value="{{ a.airport_code }}">{{ a.city }} ({{ a.airport_code }})</option>
+
                             {% endfor %}
+
                         </select>
+
                     </label>
+
                     <label class="field">
+
                         <span class="field-label">To</span>
+
                         <select id="addFlightDest" class="field-select" required>
+
                             {% for a in airports %}
+
                             <option value="{{ a.airport_code }}" {% if a.airport_code == 'DEL' %}selected{% endif %}>{{ a.city }} ({{ a.airport_code }})</option>
+
                             {% endfor %}
+
                         </select>
+
                     </label>
+
                 </div>
 
+
+
                 <div class="form-grid">
+
                     <label class="field">
+
                         <span class="field-label">Departs</span>
-                        <input type="datetime-local" id="addFlightDep" class="field-input" required value="2026-10-29T10:00">
+
+                        <input type="datetime-local" id="addFlightDep" class="field-input" required value="2026-10-31T14:00">
+
                     </label>
+
                     <label class="field">
+
                         <span class="field-label">Arrives</span>
-                        <input type="datetime-local" id="addFlightArr" class="field-input" required value="2026-10-29T12:15">
+
+                        <input type="datetime-local" id="addFlightArr" class="field-input" required value="2026-10-31T16:15">
+
                     </label>
+
                 </div>
+
+
 
                 <div class="form-grid three">
+
                     <label class="field">
+
                         <span class="field-label">Duration (minutes)</span>
+
                         <input type="number" id="addFlightDuration" class="field-input" value="135" required>
+
                     </label>
+
                     <label class="field">
+
                         <span class="field-label">Base fare (₹)</span>
+
                         <input type="number" id="addFlightFare" class="field-input" value="4700" required>
+
                     </label>
+
                     <label class="field">
+
                         <span class="field-label">Status</span>
+
                         <select id="addFlightStatus" class="field-select">
+
                             <option value="SCHEDULED">Scheduled</option>
+
                             <option value="ON_TIME">On time</option>
+
                         </select>
+
                     </label>
+
                 </div>
+
             </div>
 
+
+
             <div class="modal-footer">
+
                 <button type="button" onclick="closeModal('addFlightModal')" class="btn btn-secondary">Cancel</button>
+
                 <button type="submit" id="btnAddFlightSubmit" class="btn btn-primary">Schedule flight</button>
+
             </div>
+
         </form>
+
     </div>
+
 </div>
+
+
 
 <!-- Edit flight -->
+
 <div id="editFlightModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="editFlightTitle">
+
     <div class="modal-content narrow">
+
         <div class="modal-header">
+
             <div>
+
                 <h3 id="editFlightTitle">Edit flight <span class="op">UPDATE</span></h3>
+
                 <p>Change the fare or operating status.</p>
+
             </div>
+
             <button type="button" class="icon-btn" aria-label="Close" onclick="closeModal('editFlightModal')">&times;</button>
+
         </div>
+
+
 
         <form onsubmit="submitEditFlight(event)">
+
             <div class="modal-body">
+
                 <input type="hidden" id="editFlightId" value="">
+
                 <div class="form-grid">
+
                     <label class="field span-2">
+
                         <span class="field-label">Flight number</span>
+
                         <input type="text" id="editFlightNo" class="field-input" readonly>
+
                     </label>
+
                     <label class="field">
+
                         <span class="field-label">Base fare (₹)</span>
+
                         <input type="number" id="editFlightFare" class="field-input" required>
+
                     </label>
+
                     <label class="field">
+
                         <span class="field-label">Status</span>
+
                         <select id="editFlightStatus" class="field-select">
+
                             <option value="SCHEDULED">Scheduled</option>
+
                             <option value="ON_TIME">On time</option>
+
                             <option value="BOARDING">Boarding</option>
+
                             <option value="DELAYED">Delayed</option>
+
                             <option value="CANCELLED">Cancelled</option>
+
                         </select>
+
                     </label>
+
                 </div>
+
             </div>
 
+
+
             <div class="modal-footer">
+
                 <button type="button" onclick="closeModal('editFlightModal')" class="btn btn-secondary">Cancel</button>
+
                 <button type="submit" id="btnEditFlightSubmit" class="btn btn-primary">Save changes</button>
+
             </div>
+
         </form>
+
     </div>
+
 </div>
+
+
 
 <!-- Edit passenger -->
+
 <div id="editPassengerModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="editPaxTitle">
+
     <div class="modal-content">
+
         <div class="modal-header">
+
             <div>
+
                 <h3 id="editPaxTitle">Edit passenger <span class="op">UPDATE</span></h3>
+
                 <p>Update the contact and travel document details.</p>
+
             </div>
+
             <button type="button" class="icon-btn" aria-label="Close" onclick="closeModal('editPassengerModal')">&times;</button>
+
         </div>
 
+
+
         <form onsubmit="submitEditPassenger(event)">
+
             <div class="modal-body">
+
                 <input type="hidden" id="editPaxId" value="">
+
                 <div class="form-grid">
+
                     <label class="field">
+
                         <span class="field-label">First name</span>
+
                         <input type="text" id="editPaxFirst" class="field-input" required>
+
                     </label>
+
                     <label class="field">
+
                         <span class="field-label">Last name</span>
+
                         <input type="text" id="editPaxLast" class="field-input" required>
+
                     </label>
+
                     <label class="field span-2">
+
                         <span class="field-label">Email</span>
+
                         <input type="email" id="editPaxEmail" class="field-input" required>
+
                     </label>
+
                     <label class="field">
+
                         <span class="field-label">Phone</span>
+
                         <input type="text" id="editPaxPhone" class="field-input" required>
+
                     </label>
+
                     <label class="field">
+
                         <span class="field-label">Passport or ID</span>
+
                         <input type="text" id="editPaxPassport" class="field-input" required>
+
                     </label>
+
                 </div>
+
             </div>
+
+
 
             <div class="modal-footer">
+
                 <button type="button" onclick="closeModal('editPassengerModal')" class="btn btn-secondary">Cancel</button>
+
                 <button type="submit" id="btnEditPaxSubmit" class="btn btn-primary">Save changes</button>
+
             </div>
+
         </form>
+
     </div>
+
 </div>
+
 {% endblock %}
 
+
+
 {% block extra_scripts %}
+
 <script>
+
     function switchAdminTab(tabId, el) {
+
         document.querySelectorAll('.admin-tab-pane').forEach(t => t.style.display = 'none');
+
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
         document.getElementById(tabId).style.display = 'block';
+
         el.classList.add('active');
+
     }
+
+
 
     // Add Flight (INSERT)
+
     async function submitAddFlight(e) {
+
         e.preventDefault();
+
         const payload = {
+
             flight_number: document.getElementById('addFlightNo').value.trim().toUpperCase(),
+
             airline_id: parseInt(document.getElementById('addFlightAirline').value),
+
             aircraft_id: parseInt(document.getElementById('addFlightAircraft').value),
+
             origin_code: document.getElementById('addFlightOrigin').value,
+
             destination_code: document.getElementById('addFlightDest').value,
+
             departure_time: document.getElementById('addFlightDep').value.replace('T', ' ') + ':00',
+
             arrival_time: document.getElementById('addFlightArr').value.replace('T', ' ') + ':00',
+
             duration_minutes: parseInt(document.getElementById('addFlightDuration').value),
+
             base_fare: parseFloat(document.getElementById('addFlightFare').value),
+
             status: document.getElementById('addFlightStatus').value
+
         };
+
+
 
         const btn = document.getElementById('btnAddFlightSubmit');
+
         btn.disabled = true;
+
         try {
+
             const res = await fetch('/api/flights', {
+
                 method: 'POST',
+
                 headers: { 'Content-Type': 'application/json' },
+
                 body: JSON.stringify(payload)
+
             });
+
             const data = await res.json();
+
             if (data.success) {
+
                 showToast(data.message, 'success');
+
                 closeModal('addFlightModal');
+
                 setTimeout(() => window.location.reload(), 900);
+
             } else {
+
                 showToast(data.error || 'Failed to insert flight.', 'error');
+
             }
+
         } catch (err) {
+
             showToast('Network error: ' + err.message, 'error');
+
         } finally {
+
             btn.disabled = false;
+
         }
+
     }
+
+
 
     // Edit Flight Modal
+
     function openEditFlightModal(id, flightNo, baseFare, status) {
+
         document.getElementById('editFlightId').value = id;
+
         document.getElementById('editFlightNo').value = flightNo;
+
         document.getElementById('editFlightFare').value = baseFare;
+
         document.getElementById('editFlightStatus').value = status;
+
         openModal('editFlightModal');
+
     }
+
+
 
     async function submitEditFlight(e) {
+
         e.preventDefault();
+
         const id = document.getElementById('editFlightId').value;
+
         const payload = {
+
             base_fare: parseFloat(document.getElementById('editFlightFare').value),
+
             status: document.getElementById('editFlightStatus').value
+
         };
+
+
 
         const btn = document.getElementById('btnEditFlightSubmit');
+
         btn.disabled = true;
+
         try {
+
             const res = await fetch(`/api/flights/${id}`, {
+
                 method: 'PUT',
+
                 headers: { 'Content-Type': 'application/json' },
+
                 body: JSON.stringify(payload)
+
             });
+
             const data = await res.json();
+
             if (data.success) {
+
                 showToast(data.message, 'success');
+
                 closeModal('editFlightModal');
+
                 setTimeout(() => window.location.reload(), 900);
+
             } else {
+
                 showToast(data.error || 'Failed to update flight.', 'error');
+
             }
+
         } catch (err) {
+
             showToast('Error: ' + err.message, 'error');
+
         } finally {
+
             btn.disabled = false;
+
         }
+
     }
+
+
 
     // Delete Flight (DELETE)
+
     async function deleteFlight(id, flightNo) {
+
         if (!confirm(`Are you sure you want to DELETE flight ${flightNo} (ID: ${id}) from the database?`)) {
+
             return;
+
         }
 
+
+
         try {
+
             const res = await fetch(`/api/flights/${id}`, { method: 'DELETE' });
+
             const data = await res.json();
+
             if (data.success) {
+
                 showToast(data.message, 'success');
+
                 const row = document.getElementById(`flight-row-${id}`);
+
                 if (row) row.remove();
+
             } else {
+
                 showToast(data.error || 'Failed to delete flight.', 'error');
+
             }
+
         } catch (err) {
+
             showToast('Error: ' + err.message, 'error');
+
         }
+
     }
+
+
 
     // Edit Passenger Modal
+
     function openEditPassengerModal(id, first, last, email, phone, passport) {
+
         document.getElementById('editPaxId').value = id;
+
         document.getElementById('editPaxFirst').value = first;
+
         document.getElementById('editPaxLast').value = last;
+
         document.getElementById('editPaxEmail').value = email;
+
         document.getElementById('editPaxPhone').value = phone;
+
         document.getElementById('editPaxPassport').value = passport;
+
         openModal('editPassengerModal');
+
     }
+
+
 
     async function submitEditPassenger(e) {
+
         e.preventDefault();
+
         const id = document.getElementById('editPaxId').value;
+
         const payload = {
+
             first_name: document.getElementById('editPaxFirst').value.trim(),
+
             last_name: document.getElementById('editPaxLast').value.trim(),
+
             email: document.getElementById('editPaxEmail').value.trim(),
+
             phone: document.getElementById('editPaxPhone').value.trim(),
+
             passport_number: document.getElementById('editPaxPassport').value.trim()
+
         };
 
+
+
         const btn = document.getElementById('btnEditPaxSubmit');
+
         btn.disabled = true;
+
         try {
+
             const res = await fetch(`/api/passengers/${id}`, {
+
                 method: 'PUT',
+
                 headers: { 'Content-Type': 'application/json' },
+
                 body: JSON.stringify(payload)
+
             });
+
             const data = await res.json();
+
             if (data.success) {
+
                 showToast(data.message, 'success');
+
                 closeModal('editPassengerModal');
+
                 setTimeout(() => window.location.reload(), 900);
+
             } else {
+
                 showToast(data.error || 'Failed to update passenger.', 'error');
+
             }
+
         } catch (err) {
+
             showToast('Error: ' + err.message, 'error');
+
         } finally {
+
             btn.disabled = false;
+
         }
+
     }
+
+
 
     // Delete Passenger (DELETE)
+
     async function deletePassenger(id, name) {
+
         if (!confirm(`Are you sure you want to DELETE passenger "${name}" (ID: ${id}) from the database?`)) {
+
             return;
+
         }
+
+
 
         try {
+
             const res = await fetch(`/api/passengers/${id}`, { method: 'DELETE' });
+
             const data = await res.json();
+
             if (data.success) {
+
                 showToast(data.message, 'success');
+
                 const row = document.getElementById(`passenger-row-${id}`);
+
                 if (row) row.remove();
+
             } else {
+
                 showToast(data.error || 'Failed to delete passenger.', 'error');
+
             }
+
         } catch (err) {
+
             showToast('Error: ' + err.message, 'error');
+
         }
+
     }
 
+
+
     // Deep link from the flights page: /admin#add-flight
+
     if (location.hash === '#add-flight') openModal('addFlightModal');
+
+    // If a passenger search was submitted, open the Passengers tab.
+    if (new URLSearchParams(location.search).has('q')) {
+        switchAdminTab('passengersTab', document.querySelectorAll('.tab-btn')[1]);
+    }
+
 </script>
+
 {% endblock %}

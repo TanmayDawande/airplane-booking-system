@@ -5,16 +5,41 @@
 {% block content %}
 <section class="page-head">
     <h1 class="title-md">Demo script</h1>
-    <p class="subtitle">Cue cards for the Assessment 8, 9 and 10 recordings, with a speaking part for each teammate.</p>
+    <p class="subtitle">
+        Cue cards for the Assessment 8, 9 and 10 recordings. Each assessment has a
+        separate job; do not repeat the same screen walkthrough in all three videos.
+    </p>
 </section>
 
 <nav class="guide-nav" aria-label="Assessments">
     <a href="#a8-guide" class="btn btn-secondary btn-sm">Assessment 8: front end and connectivity</a>
     <a href="#a9-guide" class="btn btn-secondary btn-sm">Assessment 9: CRUD and SQL queries</a>
-    <a href="#a10-guide" class="btn btn-secondary btn-sm">Assessment 10: full workflow</a>
+    <a href="#a10-guide" class="btn btn-secondary btn-sm">Assessment 10: complete workflow</a>
 </nav>
 
-<!-- Assessment 8 -->
+<section class="panel" style="margin: 1.5rem 0;">
+    <h3>Before you record</h3>
+    <div class="form-grid" style="margin-top: 1rem;">
+        <div>
+            <p class="field-label">Run the setup once</p>
+            <p class="subtitle" style="margin: 0.25rem 0 0; font-size: 0.88rem;">Open <code>database/airline_db.sql</code> in MySQL Workbench and execute it as root.</p>
+        </div>
+        <div>
+            <p class="field-label">Start the app</p>
+            <div class="code-box">python app.py</div>
+        </div>
+        <div>
+            <p class="field-label">Demo login</p>
+            <p class="subtitle" style="margin: 0.25rem 0 0; font-size: 0.88rem;">Admin: <code>admin</code> / <code>password123</code><br>Passenger: <code>tanmay</code> / <code>password123</code></p>
+        </div>
+        <div>
+            <p class="field-label">Workbench</p>
+            <p class="subtitle" style="margin: 0.25rem 0 0; font-size: 0.88rem;">Connect to <code>localhost:3306</code> and select the <code>airline_db</code> schema before recording.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ========================================================================== -->
 <section id="a8-guide" class="guide-section">
     <div class="guide-head">
         <h2>Assessment 8: front end and database connectivity</h2>
@@ -22,31 +47,29 @@
     </div>
 
     <div class="role">
-        <div class="role-name">Teammate 1<small>Introduction and interface walkthrough. On camera.</small></div>
+        <div class="role-name">Teammate 1<small>Introduction and interface walkthrough. Face on camera.</small></div>
         <ol>
-            <li><strong>Introduction (0:00 to 0:45).</strong> State the team and presenter names: <em>"Hello, our DBMS project is the Airline Reservation System designed in 3NF to support flight search, seat reservations, and transactional payments."</em></li>
-            <li><strong>Front-end interface (0:45 to 1:30).</strong> Walk through the home page, the flight search form (origin, destination, date, cabin), the departures list and the navigation bar.</li>
-            <li><strong>Database connectivity (1:30 to 2:00).</strong> Click the database engine badge in the top header. It shows the backend is connected to MySQL or SQLite, with the host and the number of active tables.</li>
+            <li><strong>Title and purpose (0:00–0:40).</strong> Say: “Our project is SkyReserve, an airline reservation system. It stores airports, airlines, aircraft, flights, passengers, bookings, payments and audit logs in a normalized MySQL database.”</li>
+            <li><strong>Front end (0:40–1:30).</strong> Show the home page, the search form (origin, destination, date, cabin), the flights page, the seat map page and the Admin page. Mention the forms, tables and menus.</li>
+            <li><strong>Database connection (1:30–2:00).</strong> Click the <strong>MySQL</strong> badge in the header. Show host <code>localhost:3306</code>, database <code>airline_db</code>, table count and the IST timezone. This proves the front end is talking to MySQL, not a local file.</li>
         </ol>
     </div>
 
     <div class="role">
-        <div class="role-name">Teammate 2<small>Data entry and table verification. On camera.</small></div>
+        <div class="role-name">Teammate 2<small>Insert a record and verify it in Workbench. Face on camera.</small></div>
         <ol>
-            <li><strong>Enter a record through the front end (2:00 to 2:40).</strong> Open <a href="{{ url_for('admin_page') }}">Admin</a> and click <strong>Add passenger</strong>. Fill in a new record:
-                <div class="code-box">Name: Rohit Verma | Email: rohit.verma@example.com | Phone: +91-9876543210 | Passport: Z1234567</div>
-                Then click <strong>Add passenger</strong> in the dialog.
-            </li>
-            <li><strong>Retrieve the new record (2:40 to 3:00).</strong> Point to the green confirmation box. It shows the generated primary key (<code>passenger_id</code>) and timestamp read back from the database.</li>
-            <li><strong>Verify in the table (3:00 to 3:45).</strong> Open the <a href="{{ url_for('db_studio_page') }}">SQL studio</a> and click the <code>passengers</code> table, or run:
-                <div class="code-box">SELECT * FROM passengers WHERE email = 'rohit.verma@example.com';</div>
-                Show the row to confirm it is stored.
+            <li><strong>Sign in (2:00–2:15).</strong> Open <a href="{{ url_for('login_page') }}">Sign in</a> and use <code>admin</code> / <code>password123</code>. Point out that the header now shows the signed-in user and the IST clock.</li>
+            <li><strong>Insert through the form (2:15–2:45).</strong> Open <a href="{{ url_for('admin_page') }}">Admin</a>, click <strong>Add passenger</strong>, and enter a new passenger. Submit it. Point to the green confirmation box: passenger ID, name, email and <strong>recorded time in IST</strong>.</li>
+            <li><strong>Retrieve it (2:45–3:00).</strong> Switch to the <strong>Passengers</strong> tab and search for the new passenger by name or email. The row is read back from MySQL.</li>
+            <li><strong>Show the table in Workbench (3:00–3:30).</strong> In MySQL Workbench run:
+                <div class="code-box">USE airline_db;<br>SELECT * FROM passengers ORDER BY passenger_id DESC LIMIT 5;</div>
+                Point to the same passenger ID and the <code>created_at</code> timestamp. This is the database proof for Assessment 8.
             </li>
         </ol>
     </div>
 </section>
 
-<!-- Assessment 9 -->
+<!-- ========================================================================== -->
 <section id="a9-guide" class="guide-section">
     <div class="guide-head">
         <h2>Assessment 9: database operations and back end</h2>
@@ -54,28 +77,32 @@
     </div>
 
     <div class="role">
-        <div class="role-name">Teammate 1<small>Back-end communication and full CRUD.</small></div>
+        <div class="role-name">Teammate 1<small>Back-end code and full CRUD.</small></div>
         <ol>
-            <li><strong>Back-end architecture (0:00 to 0:45).</strong> Explain that Flask talks to the database through parameterized queries, which guard against SQL injection and keep transactions clean.</li>
-            <li><strong>INSERT.</strong> On the <a href="{{ url_for('admin_page') }}">Admin</a> page, click <strong>Schedule flight</strong>. Enter flight <code>AI-999</code> from BOM to DEL with a base fare of ₹5,200. Submit it and point out the new flight in the table.</li>
-            <li><strong>UPDATE.</strong> Click <strong>Edit</strong> on <code>AI-999</code>. Change the fare to ₹5,600 and the status to Delayed, then save. Show the new values in the table, and verify them in the SQL studio:
-                <div class="code-box">SELECT flight_number, base_fare, status FROM flights WHERE flight_number = 'AI-999';</div>
+            <li><strong>Back end (0:00–0:50).</strong> Open <code>app.py</code> and show one route, for example <code>/api/flights</code>. Then open <code>models.py</code> and show the parameterized SQL in <code>FlightModel.create</code>, <code>update</code> and <code>delete</code>. Explain: browser → Flask route → model method → PyMySQL → MySQL <code>airline_db</code>; parameters prevent SQL injection.</li>
+            <li><strong>INSERT (0:50–1:30).</strong> On <a href="{{ url_for('admin_page') }}">Admin</a>, click <strong>Schedule flight</strong>. Add <code>AI-999</code>, BOM → DEL, fare ₹5,200, a future departure date. Submit it and point to the new row.</li>
+            <li><strong>UPDATE (1:30–2:05).</strong> Click <strong>Edit</strong> on <code>AI-999</code>, change the fare to ₹5,600 and status to Delayed, save. Show the row. In Workbench run:
+                <div class="code-box">SELECT flight_id, flight_number, base_fare, status<br>FROM flights WHERE flight_number = 'AI-999';</div>
             </li>
-            <li><strong>DELETE.</strong> Click <strong>Delete</strong> on <code>AI-999</code> and confirm the dialog. The row disappears from the table, and <code>SELECT * FROM flights WHERE flight_number = 'AI-999'</code> returns 0 rows.</li>
+            <li><strong>DELETE (2:05–2:35).</strong> Click <strong>Delete</strong> on <code>AI-999</code> and confirm. Show that the row is gone and run:
+                <div class="code-box">SELECT * FROM flights WHERE flight_number = 'AI-999';</div>
+                The result must be 0 rows.
+            </li>
         </ol>
     </div>
 
     <div class="role">
-        <div class="role-name">Teammate 2<small>Complex SQL queries and triggers.</small></div>
+        <div class="role-name">Teammate 2<small>Joins, aggregation, subquery and triggers.</small></div>
         <ol>
-            <li><strong>Multi-table INNER JOIN.</strong> Open <a href="{{ url_for('reports_page') }}">Queries and reports</a>. Show the five-table JOIN across <code>bookings</code>, <code>passengers</code>, <code>flights</code>, <code>airlines</code> and <code>airports</code>, and explain how foreign keys keep the tables linked without duplicating data.</li>
-            <li><strong>GROUP BY and aggregates with HAVING.</strong> Show the airline revenue table. Explain how SQL totals bookings (<code>COUNT</code>), gross revenue (<code>SUM</code>) and average fare (<code>AVG</code>), with <code>HAVING gross_revenue &gt; 5000</code>.</li>
-            <li><strong>Nested subquery and triggers.</strong> Show the high-value passengers report, built on <code>WHERE total_amount &gt; (SELECT AVG(total_amount) FROM bookings)</code>. Finish on the <strong>Audit log</strong> tab in <a href="{{ url_for('admin_page') }}">Admin</a>, where database triggers record each insert and update.</li>
+            <li><strong>Five-table join (2:35–3:05).</strong> Open <a href="{{ url_for('reports_page') }}">Queries and reports</a> and scroll to <strong>Full itinerary (five-table join)</strong>. Explain how the foreign keys connect bookings, passengers, flights, airlines and airports.</li>
+            <li><strong>GROUP BY + HAVING (3:05–3:30).</strong> Show the <strong>Airline revenue above ₹5,000</strong> table. Explain <code>COUNT</code>, <code>SUM</code>, <code>AVG</code> and the <code>HAVING</code> filter.</li>
+            <li><strong>Nested subquery (3:30–3:50).</strong> Show <strong>Passengers above the average fare</strong>. Explain the inner <code>SELECT AVG(total_amount)</code>.</li>
+            <li><strong>Trigger proof (3:50–4:15).</strong> Open the <strong>Audit log</strong> tab in Admin. Show that inserts and updates in <code>bookings</code> and <code>flights</code> automatically created audit rows with IST timestamps.</li>
         </ol>
     </div>
 </section>
 
-<!-- Assessment 10 -->
+<!-- ========================================================================== -->
 <section id="a10-guide" class="guide-section">
     <div class="guide-head">
         <h2>Assessment 10: complete workflow and validation</h2>
@@ -83,26 +110,42 @@
     </div>
 
     <div class="role">
-        <div class="role-name">Teammate 1<small>Search, seat selection and passenger entry.</small></div>
+        <div class="role-name">Teammate 1<small>Login, search, validation and booking.</small></div>
         <ol>
-            <li><strong>Search flights (0:00 to 0:45).</strong> On the <a href="{{ url_for('index') }}">home page</a>, choose Mumbai (BOM) to New Delhi (DEL) and click <strong>Search flights</strong>.</li>
-            <li><strong>Select a flight and seat (0:45 to 2:00).</strong> Click <strong>Select seat</strong> on <code>AI-101</code>. On the cabin map, point out the occupied seats (hatched) and the open ones, then click seat <code>11C</code>. Show the price breakdown update for that seat.</li>
-            <li><strong>Input validation (2:00 to 2:30).</strong> Submit with incomplete or badly formatted fields to show client-side and server-side validation. Then enter valid passenger details.</li>
-            <li><strong>Submit the transaction.</strong> Click <strong>Confirm &amp; Pay Now</strong>, and point out that this runs as one atomic ACID transaction.</li>
+            <li><strong>Login and authentication (0:00–0:35).</strong> Open <a href="{{ url_for('login_page') }}">Sign in</a>. First enter a wrong password and show the error. Then sign in as <code>tanmay</code> / <code>password123</code>. Show the username in the header.</li>
+            <li><strong>Search (0:35–1:05).</strong> From the home page, search BOM → DEL on the date shown. Show the matching flights, cabin fare and available seats.</li>
+            <li><strong>Seat selection (1:05–1:45).</strong> Open a flight, point out occupied seats, choose an open seat, and show the fare breakdown update.</li>
+            <li><strong>Invalid input (1:45–2:15).</strong> Try a malformed email or phone number and show the server-side error. Then fill valid passenger details. Also show that selecting an already occupied seat is blocked.</li>
+            <li><strong>Confirm the transaction (2:15–2:40).</strong> Click <strong>Confirm &amp; Pay Now</strong>. Point out that the booking and payment are written in one atomic transaction. The boarding pass opens with a PNR.</li>
         </ol>
     </div>
 
     <div class="role">
-        <div class="role-name">Teammate 2<small>Boarding pass, database verification and cancellation.</small></div>
+        <div class="role-name">Teammate 2<small>Verification, cancellation and conclusion.</small></div>
         <ol>
-            <li><strong>Boarding pass (2:30 to 3:15).</strong> Show the generated pass with its PNR, passenger name, seat <code>11C</code>, departure time and barcode. Click <strong>Print or save as PDF</strong>.</li>
-            <li><strong>Verify the transaction (3:15 to 4:00).</strong> Note the PNR. Open the <a href="{{ url_for('db_studio_page') }}">SQL studio</a> and run:
-                <div class="code-box">SELECT b.pnr, b.seat_number, b.status, p.amount, p.payment_status<br>FROM bookings b JOIN payments p ON b.booking_id = p.booking_id<br>WHERE b.pnr = '&lt;YOUR_PNR&gt;';</div>
-                Both the booking and the payment rows exist, so the two inserts committed together.
+            <li><strong>Boarding pass output (2:40–3:10).</strong> Show the PNR, passenger, route, departure time in IST, seat and barcode. Print or save as PDF.</li>
+            <li><strong>Verify the transaction (3:10–3:55).</strong> In MySQL Workbench run:
+                <div class="code-box">USE airline_db;<br>SELECT b.pnr, b.booking_date, b.seat_number, b.status,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; p.transaction_id, p.amount, p.payment_status, p.payment_time<br>FROM bookings b<br>JOIN payments p ON b.booking_id = p.booking_id<br>WHERE b.pnr = '&lt;YOUR_PNR&gt;';</div>
+                Show both the booking and payment rows, with IST timestamps.
             </li>
-            <li><strong>Cancel and release the seat (4:00 to 4:45).</strong> Open <a href="{{ url_for('my_bookings_page') }}">My bookings</a> and click <strong>Cancel booking</strong>. The status changes to <code>CANCELLED</code>, the payment is refunded and seat <code>11C</code> is free to book again.</li>
-            <li><strong>Conclusion (4:45 to 5:00).</strong> All three assessments have a separate, verified demonstration that covers the DBMS curriculum.</li>
+            <li><strong>Cancel and release the seat (3:55–4:30).</strong> Open <a href="{{ url_for('my_bookings_page') }}">My bookings</a>, enter the PNR, click <strong>Cancel booking</strong>. Show the status becomes <code>CANCELLED</code>, payment <code>REFUNDED</code>, and the seat is available again on the seat map. Verify with:
+                <div class="code-box">SELECT b.pnr, b.status, p.payment_status<br>FROM bookings b<br>JOIN payments p ON b.booking_id = p.booking_id<br>WHERE b.pnr = '&lt;YOUR_PNR&gt;';</div>
+            </li>
+            <li><strong>Reports and conclusion (4:30–5:00).</strong> Open <a href="{{ url_for('reports_page') }}">Queries and reports</a>, show one summary, and conclude that the front end, Flask back end and MySQL database work as one integrated application.</li>
         </ol>
     </div>
+</section>
+
+<section class="panel" style="margin-top: 1.5rem;">
+    <h3>Recording checklist</h3>
+    <ul class="guide-checklist">
+        <li>Both teammates appear and explain their own contribution.</li>
+        <li>The presenter’s face and the screen are visible at the same time.</li>
+        <li>Three separate videos: <code>Team_Name_Assessment_8</code>, <code>Team_Name_Assessment_9</code>, <code>Team_Name_Assessment_10</code>.</li>
+        <li>Each video shows the actual running application, not slides or screenshots.</li>
+        <li>The app is connected to MySQL <code>airline_db</code>; Workbench queries show the same rows.</li>
+        <li>The submission links open correctly and the instructor has view permission.</li>
+        <li>Test the setup once more on 29.10 before the live verification.</li>
+    </ul>
 </section>
 {% endblock %}

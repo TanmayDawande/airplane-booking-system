@@ -5,8 +5,17 @@
 {% block content %}
 <section class="page-head">
     <h1 class="title-md">SQL studio</h1>
-    <p class="subtitle">Browse the tables and run queries against the live database to check what the app wrote.</p>
+    <p class="subtitle">Browse the MySQL tables and run queries against the live database to check what the app wrote.</p>
 </section>
+
+<div class="panel" style="margin-bottom: 1.5rem;">
+    <h3 style="margin-bottom: 0.5rem;">Also show this in MySQL Workbench</h3>
+    <p class="field-hint" style="margin-bottom: 0.75rem;">
+        Open MySQL Workbench, connect to <strong>localhost:3306</strong>, select
+        <strong>{{ db_info.database }}</strong> in the SCHEMAS panel, then run:
+    </p>
+    <div class="code-box">USE {{ db_info.database }};<br>SELECT * FROM flights;<br>SELECT * FROM passengers ORDER BY passenger_id DESC;<br>SELECT * FROM bookings ORDER BY booking_id DESC;</div>
+</div>
 
 <div class="studio-layout">
     <aside aria-label="Tables">
@@ -39,6 +48,7 @@
                         <option value="A9_MATH">Assessment 9: flight capacity and occupancy</option>
                         <option value="A10_TRANSACTION">Assessment 10: booking and payment written together</option>
                         <option value="AUDIT_LOGS">Trigger audit log</option>
+                        <option value="SERVER_TIME">Server time and session timezone</option>
                     </select>
                 </label>
             </div>
@@ -76,12 +86,13 @@
 <script>
     const sampleQueries = {
         'A8_SELECT': `SELECT passenger_id, first_name, last_name, email, phone, passport_number, created_at \nFROM passengers \nORDER BY passenger_id DESC LIMIT 5;`,
-        'A9_JOIN': `SELECT \n    b.pnr, \n    (p.first_name || ' ' || p.last_name) AS passenger_name, \n    al.airline_name, \n    f.flight_number, \n    orig.city AS origin_city, \n    dest.city AS dest_city, \n    b.seat_number, \n    b.travel_class, \n    b.total_amount, \n    b.status\nFROM bookings b\nJOIN passengers p ON b.passenger_id = p.passenger_id\nJOIN flights f ON b.flight_id = f.flight_id\nJOIN airlines al ON f.airline_id = al.airline_id\nJOIN airports orig ON f.origin_code = orig.airport_code\nJOIN airports dest ON f.destination_code = dest.airport_code\nORDER BY b.booking_id DESC;`,
+        'A9_JOIN': `SELECT \n    b.pnr, \n    CONCAT(p.first_name, ' ', p.last_name) AS passenger_name, \n    al.airline_name, \n    f.flight_number, \n    orig.city AS origin_city, \n    dest.city AS dest_city, \n    f.departure_time, \n    b.seat_number, \n    b.travel_class, \n    b.total_amount, \n    b.status\nFROM bookings b\nJOIN passengers p ON b.passenger_id = p.passenger_id\nJOIN flights f ON b.flight_id = f.flight_id\nJOIN airlines al ON f.airline_id = al.airline_id\nJOIN airports orig ON f.origin_code = orig.airport_code\nJOIN airports dest ON f.destination_code = dest.airport_code\nORDER BY b.booking_id DESC;`,
         'A9_GROUP': `SELECT \n    al.airline_name, \n    COUNT(b.booking_id) AS total_bookings, \n    SUM(b.total_amount) AS gross_revenue, \n    ROUND(AVG(b.total_amount), 2) AS average_fare\nFROM airlines al\nJOIN flights f ON al.airline_id = f.airline_id\nJOIN bookings b ON f.flight_id = b.flight_id\nWHERE b.status = 'CONFIRMED'\nGROUP BY al.airline_id, al.airline_name\nHAVING gross_revenue > 5000\nORDER BY gross_revenue DESC;`,
-        'A9_SUBQUERY': `SELECT \n    p.passenger_id, \n    (p.first_name || ' ' || p.last_name) AS full_name, \n    p.email, \n    b.pnr, \n    b.total_amount\nFROM passengers p\nJOIN bookings b ON p.passenger_id = b.passenger_id\nWHERE b.status = 'CONFIRMED' \n  AND b.total_amount > (\n      SELECT AVG(total_amount) \n      FROM bookings \n      WHERE status = 'CONFIRMED'\n  )\nORDER BY b.total_amount DESC;`,
+        'A9_SUBQUERY': `SELECT \n    p.passenger_id, \n    CONCAT(p.first_name, ' ', p.last_name) AS full_name, \n    p.email, \n    b.pnr, \n    b.total_amount\nFROM passengers p\nJOIN bookings b ON p.passenger_id = b.passenger_id\nWHERE b.status = 'CONFIRMED' \n  AND b.total_amount > (\n      SELECT AVG(total_amount) \n      FROM bookings \n      WHERE status = 'CONFIRMED'\n  )\nORDER BY b.total_amount DESC;`,
         'A9_MATH': `SELECT \n    f.flight_number, \n    al.airline_name, \n    ac.total_seats, \n    COUNT(CASE WHEN b.status = 'CONFIRMED' THEN b.booking_id END) AS booked, \n    (ac.total_seats - COUNT(CASE WHEN b.status = 'CONFIRMED' THEN b.booking_id END)) AS available, \n    ROUND((COUNT(CASE WHEN b.status = 'CONFIRMED' THEN b.booking_id END) * 100.0 / ac.total_seats), 2) AS occupancy_pct\nFROM flights f\nJOIN airlines al ON f.airline_id = al.airline_id\nJOIN aircrafts ac ON f.aircraft_id = ac.aircraft_id\nLEFT JOIN bookings b ON f.flight_id = b.flight_id\nGROUP BY f.flight_id, f.flight_number, al.airline_name, ac.total_seats;`,
         'A10_TRANSACTION': `SELECT \n    b.pnr, b.seat_number, b.travel_class, b.status AS booking_status,\n    pay.transaction_id, pay.payment_method, pay.amount, pay.payment_status, pay.payment_time\nFROM bookings b\nJOIN payments pay ON b.booking_id = pay.booking_id\nORDER BY b.booking_id DESC LIMIT 5;`,
-        'AUDIT_LOGS': `SELECT * FROM audit_logs ORDER BY log_id DESC LIMIT 20;`
+        'AUDIT_LOGS': `SELECT * FROM audit_logs ORDER BY log_id DESC LIMIT 20;`,
+        'SERVER_TIME': `SELECT NOW() AS server_time_ist, @@session.time_zone AS session_time_zone;`
     };
 
     function populateQuery(key) {

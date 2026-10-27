@@ -3,18 +3,12 @@
   existing view context, nothing here changes what the routes return.
 #}
 
-{% set MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] %}
-
-{# "2026-10-28 07:00:00" -> "28 Oct" #}
 {% macro short_date(value) -%}
-{%- set s = value|string -%}
-{%- if s|length >= 10 -%}{{ s[8:10]|int }} {{ MONTHS[(s[5:7]|int) - 1] }}{%- endif -%}
+{{ value|ist_date }}
 {%- endmacro %}
 
-{# "2026-10-28 07:00:00" -> "07:00" #}
 {% macro clock(value) -%}
-{%- set s = value|string -%}
-{{ s.split(' ')[1][:5] if ' ' in s else s }}
+{{ value|ist_time }}
 {%- endmacro %}
 
 {% macro status_label(status) -%}
@@ -29,6 +23,7 @@
 {% macro flight_row(f, summary=False) %}
 {% set dep = f.departure_time|string %}
 {% set arr = f.arrival_time|string %}
+{% set fare = f.cabin_fare if f.cabin_fare is defined and f.cabin_fare is not none else f.base_fare %}
 <article class="flight-row{% if summary %} summary{% endif %}">
     <div class="fl-carrier">
         <span class="fl-airline">{{ f.airline_name }}</span>
@@ -43,7 +38,7 @@
                 <span class="fl-code">{{ f.origin_code }}</span>
                 <span class="fl-city">{{ f.origin_city }}</span>
             </span>
-            <span class="fl-date">{{ short_date(f.departure_time) }}</span>
+            <span class="fl-date">{{ short_date(f.departure_time) }} IST</span>
         </div>
 
         <div class="fl-path">
@@ -58,13 +53,13 @@
                 <span class="fl-code">{{ f.destination_code }}</span>
                 <span class="fl-city">{{ f.dest_city }}</span>
             </span>
-            <span class="fl-date">{{ short_date(f.arrival_time) }}</span>
+            <span class="fl-date">{{ short_date(f.arrival_time) }} IST</span>
         </div>
     </div>
 
     <div class="fl-fare">
         <div class="fl-fare-text">
-            <span class="fl-price">₹{{ "{:,.0f}".format(f.base_fare) }}</span>
+            <span class="fl-price">₹{{ "{:,.0f}".format(fare) }}</span>
             {% if summary %}
             <span class="fl-seats">Base economy fare</span>
             {% elif f.available_seats <= 0 %}

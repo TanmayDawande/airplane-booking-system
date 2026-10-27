@@ -47,7 +47,7 @@
         </div>
         <div class="fact">
             <dt>Route</dt>
-            <dd>{{ searched_booking.origin_city }} to {{ searched_booking.dest_city }}<small>{{ short_date(searched_booking.departure_time) }}, {{ clock(searched_booking.departure_time) }}</small></dd>
+            <dd>{{ searched_booking.origin_city }} to {{ searched_booking.dest_city }}<small>{{ short_date(searched_booking.departure_time) }}, {{ clock(searched_booking.departure_time) }} IST</small></dd>
         </div>
         <div class="fact">
             <dt>Seat</dt>
@@ -82,7 +82,8 @@
 
 <section class="recent">
     <div class="section-head">
-        <h2>Recent bookings</h2>
+        <h2>{{ booking_heading }}</h2>
+        {% if not current_user %}<a class="link" href="{{ url_for('login_page') }}">Sign in to see only your bookings</a>{% endif %}
     </div>
 
     <div class="table-responsive">
@@ -95,6 +96,7 @@
                     <th>Route</th>
                     <th>Seat</th>
                     <th>Class</th>
+                    <th>Booked (IST)</th>
                     <th class="num">Fare</th>
                     <th>Status</th>
                     <th><span class="sr-only">Actions</span></th>
@@ -109,6 +111,7 @@
                     <td class="sub">{{ b.origin_city }} &rarr; {{ b.dest_city }}</td>
                     <td class="strong">{{ b.seat_number }}</td>
                     <td class="sub">{{ b.travel_class }}</td>
+                    <td class="sub nowrap">{{ b.booking_date|ist }}</td>
                     <td class="num">₹{{ "{:,.0f}".format(b.total_amount) }}</td>
                     <td>
                         {% if b.booking_status == 'CONFIRMED' %}
@@ -123,6 +126,8 @@
                         <a href="{{ url_for('ticket_page', pnr=b.pnr) }}" class="btn btn-secondary btn-sm">Ticket</a>
                     </td>
                 </tr>
+                {% else %}
+                <tr><td colspan="10" class="sub">No bookings yet. Search a flight to create one.</td></tr>
                 {% endfor %}
             </tbody>
         </table>

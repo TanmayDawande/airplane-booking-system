@@ -1,134 +1,233 @@
-# Airline Reservation System (DBMS Project)
-### Database Management Systems Laboratory Project
-**Academic Term 2026** • Prepared for Assessments 8, 9, and 10 Demonstration & Live Verification
+# SkyReserve - Airline Reservation System
+
+**DBMS Laboratory Project | Assessments 8, 9 and 10 | Academic Term 2026**
+
+SkyReserve is a MySQL-backed airline reservation application. It supports flight
+search, an interactive cabin seat map, passenger booking, payment records,
+booking cancellation, reports and a trigger-based audit trail. The Flask app
+and MySQL Workbench use the same database, so every row created by the website
+can be inspected directly in Workbench.
 
 ---
 
-## 1. Project Overview & Architecture
-The **Airline Reservation System** is a full-stack relational database application modeled in **3rd Normal Form (3NF)**. It manages flight schedules, aircraft seat inventories, passenger registrations, multi-class ticketing, financial transactions, and operational analytics.
+## 1. Quick start
 
-### Technical Stack
-- **Front-End**: Semantic HTML5, clean CSS (inspired by Google Flights & Skyscanner), vanilla JavaScript (fast, responsive, zero bulky framework dependencies).
-- **Back-End**: Python 3.10+ with Flask RESTful APIs, parameterized SQL execution, and transactional consistency.
-- **Database**:
-  - **MySQL 8.0** (Supported on Port 3306 with MySQL Workbench)
-  - **SQLite Dual-Engine** (Built-in zero-config embedded database fallback)
-- **Database Objects**: 10 normalized tables, foreign key constraints, 2 triggers, 2 stored procedures, 4 analytical views, and indexes.
+### Step 1 - Install the Python packages
 
----
-
-## 2. File & Directory Structure
-```
-g:\airplaneSystem2\
-├── app.py                      # Flask web server & RESTful endpoints
-├── database.py                 # Dual database connector (MySQL 8.0 + SQLite)
-├── models.py                   # Data Access Layer & 3NF business logic
-├── config.py                   # App configuration & credentials
-├── setup_database.py           # Database initializer & schema seed tool
-├── airline_db.sqlite3          # Pre-seeded SQLite database file
-├── sql/
-│   ├── 01_schema.sql           # DDL: 10 normalized tables with constraints
-│   ├── 02_procedures_triggers.sql # Triggers, stored procedures, and views
-│   ├── 03_sample_data.sql      # Seed data: airports, airlines, aircrafts, flights
-│   └── 04_assessment_queries.sql  # SQL demonstration queries for video recordings
-├── static/
-│   ├── css/style.css           # Clean, modern stylesheet
-│   └── js/app.js               # Interactive seat selection, modal dialogs & API requests
-├── templates/
-│   ├── base.html               # Base layout with navigation and DB status badge
-│   ├── index.html              # Flight search & metric summary cards
-│   ├── flights.html            # Flight listings with sidebar filters
-│   ├── booking.html            # Booking wizard with interactive aircraft cabin seat map
-│   ├── ticket.html             # Printable Boarding Pass & E-Ticket with verification box
-│   ├── my_bookings.html        # PNR lookup, seat modification, and cancellation
-│   ├── admin.html              # Full CRUD Portal (INSERT, SELECT, UPDATE, DELETE)
-│   ├── reports.html            # Analytical SQL queries (JOINs, GROUP BY, subqueries)
-│   ├── db_studio.html          # Built-in live Database Studio & SQL query runner
-│   └── assessment_guide.html   # Teleprompter cue cards for Assessments 8, 9, and 10
-└── README.md                   # Documentation & setup guide
+```bash
+pip install -r requirements.txt
 ```
 
----
+### Step 2 - Create the database in MySQL Workbench
 
-## 3. How to Run the Application
+1. Open **MySQL Workbench**.
+2. Connect to the local MySQL server on **localhost:3306** as `root`.
+3. Open `database/airline_db.sql`.
+4. Execute the whole file (lightning icon, or `Ctrl+Shift+Enter`).
+5. Refresh the **SCHEMAS** panel and select `airline_db`.
 
-### Running with SQLite (Immediate, Zero Configuration)
+The script creates:
+
+- the `airline_db` schema
+- 10 normalized tables with foreign keys and indexes
+- the demo data (current bookings/passengers included)
+- 8 triggers, 2 stored procedures and 4 views
+- the application user `airline_app` with password `airline123`
+
+The demo flights are dated **31 October 2026**, so they remain upcoming for the
+29 October live presentation. The migration kept the current passengers and
+bookings; two cancelled SQLite test bookings whose passenger rows had already
+been deleted were skipped because MySQL enforces foreign keys.
+
+> **Warning:** `airline_db.sql` starts with `DROP DATABASE IF EXISTS airline_db`.
+> Running it again resets the database to the demo data. Do not run it while the
+> app is in the middle of a demonstration.
+
+### Step 3 - Start the application
+
 ```bash
 python app.py
 ```
-Open **[http://127.0.0.1:5000](http://127.0.0.1:5000)** in your browser. All tables and sample data are pre-populated and ready to use.
 
-### Running with MySQL 8.0
-1. Set up the schema and seed data in your local MySQL instance:
-   ```bash
-   python setup_database.py --engine=mysql --user=root --password=YOUR_PASSWORD
-   ```
-2. Or in the running web application, click the **DB Status Badge** in the top header, select **MySQL**, enter your credentials, and click **Save & Connect**.
+Open **http://127.0.0.1:5000**.
 
----
+### Demo accounts
 
-## 4. Assessment Video Recording Guide
+| Role | Username | Password |
+|---|---|---|
+| Admin | `admin` | `password123` |
+| Staff | `staff_flight` | `password123` |
+| Passenger | `tanmay` | `password123` |
+| Passenger | `aditi` | `password123` |
 
-### Assessment 8: Front-End Design & Basic Database Connectivity (~3 Minutes)
-- **Introduction**: Introduce teammates and state project title and purpose.
-- **Interface Walkthrough**: Show the home page, flight search controls, and scheduled flights table.
-- **Database Connectivity**: Click the green **DB Status Badge** in the top navigation bar to show live engine status, host, and active table count.
-- **Insert a Record**:
-  - Click the **"A8 Proof"** button on the header.
-  - Fill in passenger details (e.g., *Rohit Verma, rohit.verma@example.com, +91-9876543210, Passport: Z1234567*).
-  - Click **"Execute INSERT & Retrieve"**.
-- **Retrieve & Verify**:
-  - Show the confirmation panel displaying the generated primary key (`passenger_id`) retrieved from the database.
-  - Switch to **DB Studio** ([/db-studio](http://127.0.0.1:5000/db-studio)) and run:
-    ```sql
-    SELECT * FROM passengers WHERE email = 'rohit.verma@example.com';
-    ```
-    Verify that the row physically exists in the database table.
+The login screen also has a **Create account** option for a new passenger.
 
 ---
 
-### Assessment 9: Database Operations & Back-End Implementation (~4 Minutes)
-- **Back-End Architecture**: Explain that Flask routes handle API requests and execute parameterized SQL queries to prevent SQL injection and ensure transaction safety.
-- **CRUD Operations**:
-  - **INSERT**: On the **Admin CRUD** page ([/admin](http://127.0.0.1:5000/admin)), click **"Schedule Flight (INSERT)"**. Add flight `AI-999` (BOM &rarr; DEL, Fare: ₹5,200). Verify it appears in the table.
-  - **SELECT**: Use the search and filter options on the Flights page.
-  - **UPDATE**: On flight `AI-999`, click **Edit**. Update the fare to ₹5,600 and change status to `DELAYED`. Show the updated values in the table and verify via SQL:
-    ```sql
-    SELECT flight_number, base_fare, status FROM flights WHERE flight_number = 'AI-999';
-    ```
-  - **DELETE**: Click **Delete** on flight `AI-999`. Verify that it is removed from the table and querying the database returns 0 rows.
-- **Important SQL Queries** (Available in **Reports** [/reports](http://127.0.0.1:5000/reports)):
-  - **5-Table INNER JOIN**: Joining `bookings`, `passengers`, `flights`, `airlines`, and `airports`.
-  - **GROUP BY with HAVING**: Calculating total bookings, gross revenue, and average ticket price by airline (`HAVING gross_revenue > 5000`).
-  - **Nested Subquery**: Identifying high-value passengers whose booking exceeds the system average fare.
-  - **Database Triggers**: View the `audit_logs` tab in the Admin portal to prove triggers automatically record insert and update events.
+## 2. Using MySQL Workbench
+
+The website does not write to a SQLite file. It writes to the MySQL schema
+`airline_db`. To inspect the live data:
+
+1. Open MySQL Workbench and connect to `localhost:3306`.
+2. Double-click **`airline_db`** in the SCHEMAS panel.
+3. Open a new query tab and run any of these:
+
+```sql
+SELECT * FROM flights;
+SELECT * FROM passengers ORDER BY passenger_id DESC;
+SELECT * FROM bookings ORDER BY booking_id DESC;
+SELECT * FROM payments ORDER BY payment_id DESC;
+SELECT * FROM audit_logs ORDER BY log_id DESC;
+```
+
+`database/demo_queries.sql` contains the full set of assessment queries
+(joins, `GROUP BY`, `HAVING`, subqueries, occupancy, views and procedures).
+Open that file and run statements one at a time with `Ctrl+Enter`.
+
+**Important:** opening a `.sql` file only shows SQL text. It does not show live
+table data by itself. You must be connected to `airline_db` and execute a
+`SELECT` statement.
+
+### Verify the timezone in Workbench
+
+```sql
+SELECT NOW() AS current_time_ist, @@session.time_zone AS session_timezone;
+```
+
+The app sets `time_zone = '+05:30'` on every connection, so all generated
+`booking_date`, `payment_time`, `created_at` and `audit_logs.timestamp` values
+are stored in **IST (Asia/Kolkata)**.
 
 ---
 
-### Assessment 10: Complete Project Workflow & Functional Validation (~5 Minutes)
-- **End-to-End Workflow**:
-  1. From Home, search flights from **Mumbai (BOM)** to **New Delhi (DEL)**.
-  2. Select Flight **AI-101**.
-  3. **Interactive Cabin Seat Map**: View occupied seats (red) and pick an available seat (e.g., **11C**). Observe dynamic price updates.
-  4. Fill in passenger details and select payment method (UPI / Card).
-  5. Click **"Confirm & Pay"** to execute the atomic transaction.
-- **Input Validation**: Show that submitting invalid input or selecting an already occupied seat is properly caught and blocked.
-- **Output Generation**: Inspect the generated **Boarding Pass & E-Ticket** with unique PNR, seat 11C, departure time, and barcode. Click **Print Boarding Pass**.
-- **ACID Transaction Verification**:
-  - Inspect the *Database Transaction Verification* box on the boarding pass.
-  - Run the query in DB Studio:
-    ```sql
-    SELECT b.pnr, b.seat_number, b.status, p.amount, p.payment_status 
-    FROM bookings b JOIN payments p ON b.booking_id = p.booking_id 
-    WHERE b.pnr = '<GENERATED_PNR>';
-    ```
-- **Cancellation & Seat Release**:
-  - Go to **Manage PNR** ([/my-bookings](http://127.0.0.1:5000/my-bookings)), enter the PNR, and click **Cancel Booking**.
-  - Verify that the status updates to `CANCELLED`, payment is marked `REFUNDED`, and the seat becomes immediately re-available on the flight seat map.
+## 3. Project structure
+
+```text
+airplaneSystem2/
+|-- app.py                         # Flask routes, page routes and JSON APIs
+|-- models.py                      # SQL data access and business rules
+|-- database.py                    # MySQL connection, transactions, SQL studio
+|-- timeutils.py                   # IST parsing and display helpers
+|-- config.py                      # MySQL and Flask configuration
+|-- requirements.txt
+|-- database/
+|   |-- airline_db.sql             # ONE file to run in MySQL Workbench
+|   `-- demo_queries.sql           # Workbench queries for the three assessments
+|-- public/static/
+|   |-- css/style.css
+|   `-- js/app.js
+|-- templates/
+|   |-- base.html                  # Header, IST clock, database status
+|   |-- login.html                 # Sign in / create account
+|   |-- index.html                 # Search and featured departures
+|   |-- flights.html               # Filters and results
+|   |-- booking.html               # Seat map, passenger form, payment
+|   |-- ticket.html                # Boarding pass and transaction proof
+|   |-- my_bookings.html           # PNR lookup, seat change, cancellation
+|   |-- admin.html                 # CRUD and audit log
+|   |-- reports.html               # Joins, HAVING, subquery, occupancy
+|   |-- db_studio.html             # In-app SQL console
+|   `-- assessment_guide.html      # Video cue cards
+`-- README.md
+```
 
 ---
 
-## 5. Sample Data for Demonstrations
-- **Sample PNRs**: `AERO101A`, `AERO101B`, `AERO205C`, `AERO812D`, `AERO501E`
-- **Active Flights**: `AI-101` (BOM-DEL), `AI-102` (DEL-BOM), `6E-205` (DEL-BLR), `UK-812` (BOM-BLR), `EK-501` (BOM-DXB)
-- **Airports**: DEL (Delhi), BOM (Mumbai), BLR (Bengaluru), HYD (Hyderabad), DXB (Dubai), LHR (London), JFK (New York)
+## 4. What to show in each assessment video
+
+The three videos must be different. The full cue cards are on `/guide`.
+
+### Assessment 8 - front end and basic connectivity
+
+- Introduce **SkyReserve** and its purpose.
+- Show the home page, search form, flights page, seat map and Admin page.
+- Click the **MySQL** badge and show `localhost:3306`, `airline_db` and the
+  number of tables.
+- Sign in as `admin`, open **Admin -> Add passenger**, submit a new passenger,
+  and show the returned passenger ID and timestamp.
+- Verify the row in Workbench with:
+  `SELECT * FROM passengers ORDER BY passenger_id DESC LIMIT 5;`
+
+### Assessment 9 - database operations and back end
+
+- Show the back-end code: `app.py` route -> `models.py` parameterized SQL ->
+  `database.py` PyMySQL connection.
+- On Admin, **INSERT** a new flight `AI-999`; **UPDATE** its fare/status;
+  **DELETE** it. Verify each step in Workbench.
+- On Reports, show the five-table INNER JOIN, `GROUP BY + HAVING`, the nested
+  subquery and the occupancy calculation.
+- Show the **Audit log** tab to prove that triggers record the operations.
+
+### Assessment 10 - complete workflow
+
+- Sign in (show a wrong password first, then `tanmay` / `password123`).
+- Search BOM -> DEL, choose a flight and an open seat.
+- Show an invalid input or occupied-seat error, then enter valid details.
+- Confirm the booking. Show the boarding pass and PNR.
+- Verify the booking + payment rows in Workbench using the generated PNR.
+- Cancel the booking and verify that the status becomes `CANCELLED`, the payment
+  becomes `REFUNDED`, and the seat is available again.
+- Finish with one report and a conclusion.
+
+### Recording checklist
+
+- Both teammates appear and explain their own contribution.
+- Face and screen are visible together.
+- Three separate videos, named with the team and assessment number.
+- Actual application execution only; no slides or screenshots.
+- Instructor has view permission to all three Drive links.
+- Test the application again on 29.10 before the live verification.
+
+---
+
+## 5. Configuration
+
+The defaults in `config.py` are:
+
+```python
+DB_HOST = '127.0.0.1'
+DB_PORT = 3306
+DB_USER = 'airline_app'
+DB_PASSWORD = 'airline123'
+DB_NAME = 'airline_db'
+```
+
+You can override them with environment variables without editing the file:
+
+```powershell
+$env:DB_USER = 'root'
+$env:DB_PASSWORD = 'your-mysql-password'
+python app.py
+```
+
+The app refuses to start if it cannot connect to MySQL, and prints the exact
+setup file to run.
+
+---
+
+## 6. Troubleshooting
+
+**`Access denied for user 'airline_app'`**
+
+The setup SQL was not executed, or the app user was not created. Run
+`database/airline_db.sql` again as root.
+
+**Workbench says "No database selected"**
+
+Double-click `airline_db` in the SCHEMAS panel, or run `USE airline_db;`.
+
+**The page shows old data after running the setup file**
+
+The setup file recreates the database. Run it again and refresh Workbench.
+
+**The app shows a UTC time**
+
+Check that the app was restarted after the configuration changes, and run:
+
+```sql
+SELECT NOW(), @@session.time_zone;
+```
+
+The app connection sets `+05:30`; Workbench uses your local session. All new
+rows should match the IST clock in the website header.

@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Create account' if mode == 'register' else 'Sign in' }} | SkyReserve{% endblock %}
+
+{% block content %}
+<section class="auth-shell">
+    <div class="auth-card">
+        <aside class="auth-aside">
+            <div>
+                <span class="auth-eyebrow">SkyReserve · DBMS project</span>
+                <h1 class="auth-title">One account.<br>Every <em>flight</em>.</h1>
+                <p class="auth-copy">
+                    Sign in to keep your bookings together, or create a passenger
+                    account to book a seat in a few steps.
+                </p>
+            </div>
+
+            <div class="auth-points">
+                <span><i></i>Search live flights and choose a seat</span>
+                <span><i></i>One atomic booking and payment transaction</span>
+                <span><i></i>All timestamps are stored and shown in IST</span>
+            </div>
+        </aside>
+
+        <div class="auth-main">
+            <div class="auth-tabs" role="tablist" aria-label="Authentication mode">
+                <a href="{{ url_for('login_page', next=next_url) }}" class="{{ 'active' if mode != 'register' else '' }}">Sign in</a>
+                <a href="{{ url_for('register_page', next=next_url) }}" class="{{ 'active' if mode == 'register' else '' }}">Create account</a>
+            </div>
+
+            <h2>{{ 'Create a passenger account' if mode == 'register' else 'Welcome back' }}</h2>
+            <p class="auth-sub">
+                {{ 'Your account will be linked to a passenger record in MySQL.' if mode == 'register' else 'Use the demo account below or your own account.' }}
+            </p>
+
+            {% if error %}
+            <div class="auth-error" role="alert">{{ error }}</div>
+            {% endif %}
+
+            {% if mode == 'register' %}
+            <form class="auth-form" action="{{ url_for('register_page') }}" method="POST">
+                <input type="hidden" name="next" value="{{ next_url }}">
+
+                <div class="form-grid">
+                    <label class="field">
+                        <span class="field-label">First name</span>
+                        <input type="text" name="first_name" class="field-input" required
+                               value="{{ form.get('first_name', '') }}" autocomplete="given-name">
+                    </label>
+                    <label class="field">
+                        <span class="field-label">Last name</span>
+                        <input type="text" name="last_name" class="field-input" required
+                               value="{{ form.get('last_name', '') }}" autocomplete="family-name">
+                    </label>
+
+                    <label class="field span-2">
+                        <span class="field-label">Email</span>
+                        <input type="email" name="email" class="field-input" required
+                               value="{{ form.get('email', '') }}" autocomplete="email">
+                    </label>
+
+                    <label class="field">
+                        <span class="field-label">Phone</span>
+                        <input type="tel" name="phone" class="field-input" required
+                               value="{{ form.get('phone', '') }}" placeholder="+91-9876543210" autocomplete="tel">
+                    </label>
+                    <label class="field">
+                        <span class="field-label">Passport or ID</span>
+                        <input type="text" name="passport_number" class="field-input" required
+                               value="{{ form.get('passport_number', '') }}" placeholder="Z1234567">
+                    </label>
+
+                    <label class="field">
+                        <span class="field-label">Date of birth</span>
+                        <input type="date" name="date_of_birth" class="field-input" required
+                               value="{{ form.get('date_of_birth', '2000-01-01') }}">
+                    </label>
+                    <label class="field">
+                        <span class="field-label">Gender</span>
+                        <select name="gender" class="field-select">
+                            <option value="MALE" {% if form.get('gender') == 'MALE' %}selected{% endif %}>Male</option>
+                            <option value="FEMALE" {% if form.get('gender') == 'FEMALE' %}selected{% endif %}>Female</option>
+                            <option value="OTHER" {% if form.get('gender') == 'OTHER' %}selected{% endif %}>Other</option>
+                        </select>
+                    </label>
+
+                    <label class="field span-2">
+                        <span class="field-label">Username</span>
+                        <input type="text" name="username" class="field-input" required
+                               value="{{ form.get('username', '') }}" autocomplete="username">
+                    </label>
+                    <label class="field span-2">
+                        <span class="field-label">Password (minimum 6 characters)</span>
+                        <input type="password" name="password" class="field-input" required minlength="6" autocomplete="new-password">
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg">Create account</button>
+            </form>
+            <p class="auth-switch">
+                Already registered? <a href="{{ url_for('login_page', next=next_url) }}">Sign in</a>
+            </p>
+            {% else %}
+            <form class="auth-form" action="{{ url_for('login_page') }}" method="POST">
+                <input type="hidden" name="next" value="{{ next_url }}">
+
+                <label class="field">
+                    <span class="field-label">Username</span>
+                    <input type="text" name="username" class="field-input" required
+                           value="{{ username or '' }}" autocomplete="username" autofocus>
+                </label>
+                <label class="field">
+                    <span class="field-label">Password</span>
+                    <input type="password" name="password" class="field-input" required autocomplete="current-password">
+                </label>
+
+                <button type="submit" class="btn btn-primary btn-lg">Sign in</button>
+            </form>
+
+            <div class="auth-demo">
+                <strong>Demo accounts</strong><br>
+                Admin: <code>admin</code> / <code>password123</code><br>
+                Passenger: <code>tanmay</code> / <code>password123</code>
+            </div>
+            <p class="auth-switch">
+                New passenger? <a href="{{ url_for('register_page', next=next_url) }}">Create an account</a>
+            </p>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -5,8 +5,12 @@
 
 {% block content %}
 <section class="page-head">
+    <span class="auth-eyebrow">Airline reservation system · DBMS project</span>
     <h1>Find a flight</h1>
-    <p class="subtitle">Choose a route and a date. You pick your seat on the next screen.</p>
+    <p class="subtitle">
+        SkyReserve is a MySQL-backed airline reservation application. Search a route,
+        choose a seat, pay, and keep the boarding pass. All times are shown in IST.
+    </p>
 </section>
 
 <form class="search-bar" action="{{ url_for('flights_page') }}" method="GET">
@@ -32,7 +36,7 @@
 
     <label class="field">
         <span class="field-label">Departure date</span>
-        <input type="date" name="date" class="field-input" value="2026-10-28">
+        <input type="date" name="date" class="field-input" value="{{ default_date }}">
     </label>
 
     <label class="field">
@@ -53,6 +57,13 @@
     <span><b>{{ stats.flights }}</b>scheduled flights</span>
     <span><b>{{ stats.passengers }}</b>passengers</span>
 </p>
+
+{% if not current_user %}
+<p class="field-hint" style="margin: -0.75rem 0 1.75rem;">
+    Demo admin: <code>admin</code> / <code>password123</code>.
+    <a class="link" href="{{ url_for('login_page') }}">Sign in</a> to book and manage a trip.
+</p>
+{% endif %}
 
 <section class="departures">
     <div class="section-head">

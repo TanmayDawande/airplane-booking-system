@@ -32,7 +32,7 @@
 
                 <label class="field">
                     <span class="field-label">Date</span>
-                    <input type="date" name="date" class="field-input" value="{{ travel_date }}">
+                    <input type="date" name="date" class="field-input" value="{{ travel_date or default_date }}">
                 </label>
 
                 <label class="field">
